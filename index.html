@@ -1,10 +1,232 @@
-html<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-    <title>我的第一個網站</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shawn的作品集</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #faf7f0;
+    --bg-card: #ffffff;
+    --bg-card-hover: #fdfbf5;
+    --text: #1f1c18;
+    --text-muted: #5a534a;
+    --text-dim: #8a8270;
+    --border: #e0d8c4;
+    --border-strong: #c4b896;
+    --accent: #a84838;
+    --accent-light: #d9614f;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+    --font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(at 10% 0%, rgba(168, 72, 56, 0.04) 0px, transparent 50%),
+      radial-gradient(at 90% 100%, rgba(168, 72, 56, 0.03) 0px, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 80px 32px 60px;
+  }
+
+  /* Header */
+  header {
+    margin-bottom: 60px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+  }
+  header::before {
+    content: "";
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 80px; height: 3px;
+    background: var(--accent);
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    background: rgba(168, 72, 56, 0.08);
+    border: 1px solid rgba(168, 72, 56, 0.2);
+    padding: 4px 12px;
+    border-radius: 3px;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+  h1 {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 17px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* Section */
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  /* Project cards */
+  .projects {
+    display: grid;
+    gap: 18px;
+    margin-bottom: 60px;
+  }
+  .project {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 26px 28px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+  }
+  .project::after {
+    content: "→";
+    position: absolute;
+    top: 26px; right: 28px;
+    font-size: 22px;
+    color: var(--text-dim);
+    transition: transform 0.2s, color 0.2s;
+  }
+  .project:hover {
+    border-color: var(--accent-light);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  .project:hover::after {
+    transform: translateX(4px);
+    color: var(--accent);
+  }
+  .project-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .project-meta .tag {
+    background: rgba(168, 72, 56, 0.08);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .project h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    padding-right: 30px;
+  }
+  .project p {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  footer {
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    line-height: 1.8;
+  }
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  footer a:hover { text-decoration: underline; }
+
+  /* Empty placeholder */
+  .placeholder {
+    background: transparent;
+    border: 2px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 30px 28px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 50px 20px 40px; }
+    h1 { font-size: 32px; }
+    .subtitle { font-size: 15px; }
+    .project { padding: 22px 20px; }
+    .project::after { right: 20px; top: 22px; }
+    .project h2 { font-size: 19px; padding-right: 24px; }
+  }
+</style>
 </head>
 <body>
-    <h1>哈囉，世界！</h1>
-    <p>這是我的第一個 GitHub Pages 網站。</p>
+
+<div class="container">
+
+  <header>
+    <span class="eyebrow">QQ · 2026</span>
+    <h1>醬醬</h1>
+    <p class="subtitle">TEST 你董ㄇ。</p>
+  </header>
+
+  <p class="section-title">— 作品列表 —</p>
+
+  <div class="projects">
+    <a href="./wwm-guide-2.1.10/" class="project">
+      <div class="project-meta">
+        <span class="tag">遊戲攻略</span>
+        <span>2026/08</span>
+      </div>
+      <h2>測試標題</h2>
+      <p>這是副標題</p>
+    </a>  
+   
+   
+
+
+  </div>
+
+  <footer>
+    逼逼逼逼八 · 
+  </footer>
+
+</div>
+
 </body>
 </html>
