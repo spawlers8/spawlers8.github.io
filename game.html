@@ -809,7 +809,7 @@ async function loadSect() {
       if (ok && data.ok) {
         const text = data.autoAssigned
           ? `${data.newLeaderName} 達到門檻，自動成為新掌門！`
-          : (data.win ? `挑戰成功！你擊敗了 ${data.leaderName}，成為新任掌門！` : `挑戰失敗，${data.leaderName} 守住了掌門之位`);
+          : data.fullMessage;
         const confirmBtn = document.getElementById('btn-sect-action-confirm');
         box.className = `result-box show${data.win || data.autoAssigned ? '' : ' error'}`;
         box.textContent = text;
