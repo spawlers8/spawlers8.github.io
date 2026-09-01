@@ -896,17 +896,7 @@ async function loadCombat() {
     <div class="section-title">組隊副本${!pending?.hasPending ? '' : '（其他人選）'}</div>
     <div class="result-box" id="dungeon-result"></div>
     <div class="panel" id="partners-list">
-      ${partnersRes.ok && partnersRes.data.canJoin === false ? `
-        <div class="empty">
-          今日副本次數已達上限
-          <div style="font-size:11px;margin-top:8px;color:var(--ink-soft)">
-            診斷：今天日期 ${partnersRes.data.debug?.todayDateString}／
-            最後遊玩日期 ${partnersRes.data.debug?.lastDungeonDateString || '無'}／
-            算入今天 ${partnersRes.data.debug?.countedAsToday ? '是' : '否'}／
-            次數 ${partnersRes.data.debug?.rawDungeonCount} (原始) → ${partnersRes.data.debug?.effectiveCount} (實際採計)
-          </div>
-        </div>
-      ` :
+      ${partnersRes.ok && partnersRes.data.canJoin === false ? `<div class="empty">今日副本次數已達上限</div>` :
         partners.length === 0 ? `<div class="empty">目前沒有其他可組隊的俠客</div>` :
         partners.map(p => `
           <div class="row" data-partner-row="${p.discordId}">
