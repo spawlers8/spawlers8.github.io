@@ -251,6 +251,7 @@
     border-left: 3px solid var(--seal);
     font-size: 14px;
     display: none;
+    white-space: pre-line;
   }
   .result-box.show { display: block; }
   .result-box.error { border-left-color: var(--ink-soft); color: var(--ink-soft); }
@@ -906,12 +907,8 @@ async function loadCombat() {
     const { ok, data } = await api('/api/realm-break/attempt', { method: 'POST' });
     if (ok && data.ok) {
       refreshPlaque();
-      showResultThenConfirm(
-        box,
-        data.success ? `突破成功！境界提升至 ${data.newRealm}` : `突破失敗，修為 -${data.lossAmount}`,
-        !data.success,
-        () => loadCombat()
-      );
+      const extra = data.success ? '' : `\n（修為 -${data.lossAmount}，今日無法再試）`;
+      showResultThenConfirm(box, data.announcementText + extra, !data.success, () => loadCombat());
     } else {
       box.className = 'result-box show error';
       box.textContent = '目前無法突破';
