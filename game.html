@@ -775,6 +775,16 @@ async function loadSect() {
         <div class="row"><span class="row-label">貢獻</span><span class="row-value">${my.exp}</span></div>
         <div class="row"><span class="row-label">倉庫加成</span><span class="row-value">+${my.vaultBonusPercent}%</span></div>
       </div>
+      <div class="section-title">門派事務</div>
+      <div class="panel">
+        <div class="btn-row">
+          ${my.isLeader ? '' : `<button class="btn btn-primary" id="btn-challenge-leader">👑 挑戰掌門</button>`}
+          <button class="btn" id="btn-leave-sect">🚪 退出門派</button>
+        </div>
+        ${my.isLeader ? `<div class="weapon-meta" style="margin-top:8px">你是本門派掌門，無法挑戰自己</div>` : ''}
+        <div class="result-box" id="sect-action-result"></div>
+        <button class="btn btn-block" id="btn-sect-action-confirm" style="margin-top:10px;display:none">確定</button>
+      </div>
       <div class="section-title">捐獻倉庫</div>
       <div class="panel">
         <div class="btn-row" id="donate-buttons">
@@ -790,6 +800,53 @@ async function loadSect() {
         ${sects.length === 0 ? `<div class="empty">目前沒有門派資料</div>` : renderSectOverviewRows(sects, { showJoinButton: false })}
       </div>
     `;
+
+    document.getElementById('btn-challenge-leader')?.addEventListener('click', async function () {
+      const box = document.getElementById('sect-action-result');
+      this.disabled = true;
+      this.textContent = '挑戰中……';
+      const { ok, data } = await api('/api/sect/leader-challenge', { method: 'POST' });
+      if (ok && data.ok) {
+        const text = data.autoAssigned
+          ? `${data.newLeaderName} 達到門檻，自動成為新掌門！`
+          : (data.win ? `挑戰成功！你擊敗了 ${data.leaderName}，成為新任掌門！` : `挑戰失敗，${data.leaderName} 守住了掌門之位`);
+        const confirmBtn = document.getElementById('btn-sect-action-confirm');
+        box.className = `result-box show${data.win || data.autoAssigned ? '' : ' error'}`;
+        box.textContent = text;
+        confirmBtn.style.display = 'block';
+        confirmBtn.onclick = () => loadSect();
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = {
+          NOT_IN_SECT: '尚未加入門派',
+          BOT_NOT_READY: 'bot 剛啟動還沒準備好，稍後再試',
+          NO_ONE_QUALIFIED: '目前門派內無人達到掌門門檻',
+          EXP_NOT_ENOUGH: `門派經驗未達門檻（需要 ${data.need}，目前 ${data.have}）`,
+          COOLDOWN: `你已挑戰過掌門，請等待 ${data.remainDays} 天`,
+          ALREADY_LEADER: '你已經是掌門了',
+        }[data.error] || '挑戰失敗，請重試';
+        this.disabled = false;
+        this.textContent = '👑 挑戰掌門';
+      }
+    });
+
+    document.getElementById('btn-leave-sect')?.addEventListener('click', async function () {
+      if (!confirm('確定要退出門派嗎？退出後需要重新累積門派經驗。')) return;
+      const box = document.getElementById('sect-action-result');
+      this.disabled = true;
+      const { ok, data } = await api('/api/sect/leave', { method: 'POST' });
+      if (ok && data.ok) {
+        showResultThenConfirm(box, `已退出 ${data.leftSect}`, false, () => loadSect());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = {
+          LEADER_CANNOT_LEAVE: '掌門無法退出門派，請先轉讓或被挑戰下位',
+          NOT_IN_SECT: '尚未加入門派',
+          TOO_EARLY: `尚未滿 ${data.minDays} 天，目前加入 ${data.daysJoined} 天`,
+        }[data.error] || '退出失敗，請重試';
+        this.disabled = false;
+      }
+    });
     el.querySelectorAll('[data-amt]').forEach(btn => {
       btn.onclick = async function () {
         const amount = Number(this.dataset.amt);
