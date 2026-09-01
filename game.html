@@ -732,18 +732,35 @@ function renderGachaResult(weapons, errorCode) {
   `;
 }
 
+// 門派總覽表格，跟 Discord 版本一樣顯示每個門派的人數、倉庫銀兩、加成、距下一階還差多少
+function renderSectOverviewRows(sects, { showJoinButton }) {
+  return sects.map(s => `
+    <div class="row">
+      <div>
+        <div class="row-value">${escapeHtml(s.name)}（${escapeHtml(s.style)}）</div>
+        <div class="weapon-meta">
+          人數 ${s.members}　💰 ${s.vaultTotal.toLocaleString()}　⚡ +${s.vaultBonusPercent}%
+          ${s.nextTier ? `（距下階還差 ${s.nextTier.remaining.toLocaleString()}）` : '（已達上限）'}
+        </div>
+      </div>
+      ${showJoinButton ? `<button class="btn" data-key="${s.key}">加入</button>` : ''}
+    </div>
+  `).join('');
+}
+
 async function loadSect() {
   const el = document.getElementById('view-sect');
   el.innerHTML = `<div class="loading">江湖門派查訪中……</div>`;
 
   const [meRes, overviewRes] = await Promise.all([api('/api/sect/me'), api('/api/sect')]);
+  const sects = overviewRes.ok ? overviewRes.data.sects : [];
 
   if (meRes.ok && meRes.data.joined) {
     const my = meRes.data;
     el.innerHTML = `
       <div class="section-title">我的門派</div>
       <div class="panel">
-        <div class="row"><span class="row-label">門派</span><span class="row-value">${escapeHtml(my.name)}</span></div>
+        <div class="row"><span class="row-label">門派</span><span class="row-value">${escapeHtml(my.name)}${my.style ? `（${escapeHtml(my.style)}）` : ''}</span></div>
         <div class="row"><span class="row-label">地位</span><span class="row-value">${escapeHtml(my.rank)}</span></div>
         <div class="row"><span class="row-label">貢獻</span><span class="row-value">${my.exp}</span></div>
         <div class="row"><span class="row-label">倉庫加成</span><span class="row-value">+${my.vaultBonusPercent}%</span></div>
@@ -757,6 +774,10 @@ async function loadSect() {
         </div>
         <div class="result-box" id="donate-result"></div>
         <button class="btn btn-block" id="btn-donate-confirm" style="margin-top:10px;display:none">確定</button>
+      </div>
+      <div class="section-title">門派總覽</div>
+      <div class="panel">
+        ${sects.length === 0 ? `<div class="empty">目前沒有門派資料</div>` : renderSectOverviewRows(sects, { showJoinButton: false })}
       </div>
     `;
     el.querySelectorAll('[data-amt]').forEach(btn => {
@@ -784,19 +805,10 @@ async function loadSect() {
     return;
   }
 
-  const sects = overviewRes.ok ? overviewRes.data.sects : [];
   el.innerHTML = `
     <div class="section-title">門派總覽</div>
     <div class="panel" id="sect-list">
-      ${sects.map(s => `
-        <div class="sect-row">
-          <div class="sect-info">
-            <div class="sect-name">${escapeHtml(s.name)}</div>
-            <div class="sect-detail">人數 ${s.members}　倉庫加成 +${s.vaultBonusPercent}%</div>
-          </div>
-          <button class="btn" data-key="${s.key}">加入</button>
-        </div>
-      `).join('')}
+      ${sects.length === 0 ? `<div class="empty">目前沒有門派資料</div>` : renderSectOverviewRows(sects, { showJoinButton: true })}
     </div>
     <div class="result-box" id="join-result"></div>
   `;
