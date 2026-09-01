@@ -838,9 +838,13 @@ async function loadCombat() {
   const el = document.getElementById('view-combat');
   el.innerHTML = `<div class="loading">整軍備戰中……</div>`;
 
-  const [realmRes, partnersRes, pendingRes] = await Promise.all([
-    api('/api/realm-break'), api('/api/dungeon/partners'), api('/api/dungeon/pending-invite'),
+  const [realmRes, partnersRes, pendingRes, outgoingRes] = await Promise.all([
+    api('/api/realm-break'), api('/api/dungeon/partners'), api('/api/dungeon/pending-invite'), api('/api/dungeon/outgoing-invite'),
   ]);
+
+  // 用後端真實資料同步 outgoingInviteTarget，不管重新整理或切分頁都能正確反映
+  const outgoing = outgoingRes.ok ? outgoingRes.data : { hasOutgoing: false };
+  outgoingInviteTarget = outgoing.hasOutgoing ? outgoing.targetDiscordId : null;
 
   const r = realmRes.ok ? realmRes.data : null;
   const realmHtml = !r ? '' : r.maxRealm ? `
@@ -873,6 +877,16 @@ async function loadCombat() {
     </div>
   ` : '';
 
+  // 我目前發出去、還沒被回應的邀請（獨立區塊，隨時看得到、隨時能取消）
+  const outgoingHtml = outgoing.hasOutgoing ? `
+    <div class="section-title">我的邀請</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">你邀請了 ${escapeHtml(outgoing.targetName)} 組隊闖副本，等待對方回應</span></div>
+      <button class="btn btn-block" id="btn-cancel-outgoing" style="margin-top:8px">取消邀請</button>
+      <div class="result-box" id="outgoing-result"></div>
+    </div>
+  ` : '';
+
   const partners = partnersRes.ok && partnersRes.data.canJoin !== false ? (partnersRes.data.partners || []) : [];
   const partnersHtml = `
     <div class="section-title">組隊副本${!pending?.hasPending ? '' : '（其他人選）'}</div>
@@ -883,7 +897,7 @@ async function loadCombat() {
         partners.map(p => `
           <div class="row" data-partner-row="${p.discordId}">
             <span class="row-label">${escapeHtml(p.name)}（戰力 ${p.power}）</span>
-            <button class="btn" data-invite="${p.discordId}">${outgoingInviteTarget === p.discordId ? '取消邀請' : '邀請'}</button>
+            <button class="btn" data-invite="${p.discordId}" ${outgoingInviteTarget && outgoingInviteTarget !== p.discordId ? 'disabled' : ''}>${outgoingInviteTarget === p.discordId ? '取消邀請' : '邀請'}</button>
           </div>
         `).join('')}
     </div>
@@ -900,7 +914,19 @@ async function loadCombat() {
     </div>
   `;
 
-  el.innerHTML = realmHtml + pendingHtml + searchHtml + partnersHtml;
+  el.innerHTML = realmHtml + pendingHtml + outgoingHtml + searchHtml + partnersHtml;
+
+  document.getElementById('btn-cancel-outgoing')?.addEventListener('click', async () => {
+    const box = document.getElementById('outgoing-result');
+    const { ok, data } = await api('/api/dungeon/invite/cancel', { method: 'POST', body: { targetDiscordId: outgoing.targetDiscordId } });
+    if (ok && data.ok) {
+      outgoingInviteTarget = null;
+      showResultThenConfirm(box, '已取消邀請', false, () => loadCombat());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '取消失敗，請重試';
+    }
+  });
 
   document.getElementById('btn-realm-break')?.addEventListener('click', async () => {
     const box = document.getElementById('realm-result');
