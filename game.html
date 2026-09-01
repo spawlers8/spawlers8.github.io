@@ -901,6 +901,7 @@ async function loadWorkshop() {
         `).join('')}
       ${avail.length > 0 ? `<button class="btn btn-primary btn-block" id="btn-quick-forge" style="margin-top:10px">快速強化（全部自動配對）</button>` : ''}
       <div class="result-box" id="quick-forge-result"></div>
+      <button class="btn btn-block" id="btn-quick-forge-confirm" style="margin-top:10px;display:none">確定</button>
     </div>
     <div id="forge-select"></div>
 
@@ -933,14 +934,26 @@ async function loadWorkshop() {
     btn.onclick = () => loadForgeSelect(btn.dataset.forgeRarity);
   });
 
-  document.getElementById('btn-quick-forge')?.addEventListener('click', async () => {
+  document.getElementById('btn-quick-forge')?.addEventListener('click', async function () {
     const box = document.getElementById('quick-forge-result');
+    this.disabled = true;
+    this.textContent = '強化中……';
     const { ok, data } = await api('/api/weapon-forge/quick-forge', { method: 'POST' });
     box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
     box.textContent = ok && data.ok
-      ? (data.totalRounds === 0 ? '沒有可配對的武學' : `完成 ${data.totalRounds} 次強化，成功 ${data.successCount} 次、失敗 ${data.failCount} 次`)
+      ? (data.totalRounds === 0 ? '沒有可配對的武學' : `完成 ${data.totalRounds} 次強化，成功 ${data.successCount} 次、失敗 ${data.failCount} 次${data.gained.length > 0 ? '，獲得：' + data.gained.map(g => g.display).join('、') : ''}`)
       : '快速強化失敗，請重試';
-    if (ok && data.ok) { loadBackpack(); loadWorkshop(); }
+
+    if (ok && data.ok) {
+      loadBackpack();
+      this.style.display = 'none';
+      const confirmBtn = document.getElementById('btn-quick-forge-confirm');
+      confirmBtn.style.display = 'block';
+      confirmBtn.onclick = () => loadWorkshop();
+    } else {
+      this.disabled = false;
+      this.textContent = '快速強化（全部自動配對）';
+    }
   });
 
   document.querySelectorAll('[data-accept-offer]').forEach(btn => {
@@ -1018,6 +1031,7 @@ async function loadForgeSelect(rarity) {
       `).join('')}
       <button class="btn btn-primary btn-block" id="btn-do-forge" style="margin-top:10px">融合</button>
       <div class="result-box" id="forge-result"></div>
+      <button class="btn btn-block" id="btn-forge-confirm" style="margin-top:10px;display:none">確定</button>
     </div>
   `;
   document.getElementById('btn-do-forge').onclick = async () => {
@@ -1028,12 +1042,25 @@ async function loadForgeSelect(rarity) {
       box.textContent = '請選擇偶數件武學';
       return;
     }
+    const btn = document.getElementById('btn-do-forge');
+    btn.disabled = true;
+    btn.textContent = '融合中……';
     const { ok, data: fdata } = await api('/api/weapon-forge/forge', { method: 'POST', body: { rarity, selections: checked } });
     box.className = `result-box show${ok && fdata.ok ? '' : ' error'}`;
     box.textContent = ok && fdata.ok
-      ? `完成 ${fdata.pairs} 次融合，成功 ${fdata.successCount} 次、失敗 ${fdata.failCount} 次`
+      ? `完成 ${fdata.pairs} 次融合，成功 ${fdata.successCount} 次、失敗 ${fdata.failCount} 次${fdata.gained.length > 0 ? '，獲得：' + fdata.gained.map(g => g.display).join('、') : ''}`
       : '融合失敗，請重試';
-    if (ok && fdata.ok) { loadBackpack(); loadWorkshop(); }
+
+    if (ok && fdata.ok) {
+      loadBackpack(); // 背包在別的分頁，不影響目前畫面，可以馬上更新
+      btn.style.display = 'none';
+      const confirmBtn = document.getElementById('btn-forge-confirm');
+      confirmBtn.style.display = 'block';
+      confirmBtn.onclick = () => loadWorkshop(); // 看完結果，自己按確定才重新整理這個分頁
+    } else {
+      btn.disabled = false;
+      btn.textContent = '融合';
+    }
   };
 }
 
