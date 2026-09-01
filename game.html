@@ -1035,6 +1035,9 @@ async function loadWorkshop() {
   const avail = availRes.ok ? availRes.data.available : [];
   const offers = offersRes.ok ? offersRes.data.offers : [];
 
+  const playersRes = await api('/api/trade/players');
+  const tradeablePlayers = playersRes.ok ? playersRes.data.players : [];
+
   el.innerHTML = `
     <div class="section-title">武學強化</div>
     <div class="panel" id="forge-panel">
@@ -1068,10 +1071,13 @@ async function loadWorkshop() {
 
     <div class="section-title">主動發起交換</div>
     <div class="panel">
-      <div class="btn-row">
-        <input type="text" id="trade-name" placeholder="輸入對方名稱" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
-        <button class="btn" id="btn-trade-search">查詢</button>
-      </div>
+      ${tradeablePlayers.length === 0 ? `<div class="empty">目前沒有其他玩家有武學可交換</div>` : `
+        <label style="font-size:12px;color:var(--ink-soft)">選擇對象：</label>
+        <select id="trade-target-select" style="width:100%;padding:10px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
+          <option value="">請選擇玩家</option>
+          ${tradeablePlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}</option>`).join('')}
+        </select>
+      `}
       <div id="trade-target"></div>
     </div>
   `;
@@ -1122,13 +1128,14 @@ async function loadWorkshop() {
     };
   });
 
-  document.getElementById('btn-trade-search').onclick = async () => {
-    const name = document.getElementById('trade-name').value.trim();
+  document.getElementById('trade-target-select')?.addEventListener('change', async function () {
+    const targetDiscordId = this.value;
     const box = document.getElementById('trade-target');
-    if (!name) return;
+    if (!targetDiscordId) { box.innerHTML = ''; return; }
+
     box.innerHTML = `<div class="loading">查訪中……</div>`;
-    const { ok, data } = await api(`/api/profile/search?name=${encodeURIComponent(name)}`);
-    if (!ok) { box.innerHTML = `<div class="empty">找不到這位俠客</div>`; return; }
+    const { ok, data } = await api(`/api/profile/${targetDiscordId}`);
+    if (!ok) { box.innerHTML = `<div class="empty">讀取失敗，請重試</div>`; return; }
     const myWeapons = state.backpack?.weapons || [];
     if (myWeapons.length === 0 || data.weapons.length === 0) {
       box.innerHTML = `<div class="empty">你或對方沒有武學可交換</div>`;
@@ -1155,12 +1162,12 @@ async function loadWorkshop() {
       const theirIdx = Number(document.getElementById('trade-their-weapon').value);
       const { ok, data: pdata } = await api('/api/trade/propose', {
         method: 'POST',
-        body: { targetDiscordId: data.discordId, myWeaponIndex: myIdx, theirWeaponIndex: theirIdx },
+        body: { targetDiscordId, myWeaponIndex: myIdx, theirWeaponIndex: theirIdx },
       });
       rbox.className = `result-box show${ok && pdata.ok ? '' : ' error'}`;
       rbox.textContent = ok && pdata.ok ? '交換邀請已送出，等待對方回應' : '送出失敗';
     };
-  };
+  });
 }
 
 async function loadForgeSelect(rarity) {
