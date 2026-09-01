@@ -417,9 +417,24 @@ function renderApp() {
   loadRedeem();
 }
 
+// 每個分頁對應的資料載入函式，切換分頁時會重新呼叫，確保看到的永遠是最新資料
+// （狀態頁不用重新打 API，它只是顯示 state.profile，refreshPlaque() 已經會即時更新它）
+const TAB_LOADERS = {
+  backpack: loadBackpack,
+  jianghu: loadJianghu,
+  shop: loadShop,
+  gacha: renderGacha,
+  sect: loadSect,
+  combat: loadCombat,
+  workshop: loadWorkshop,
+  world: loadWorld,
+  redeem: loadRedeem,
+};
+
 function switchTab(key) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === key));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${key}`));
+  TAB_LOADERS[key]?.();
 }
 
 function escapeHtml(s) {
