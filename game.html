@@ -481,9 +481,14 @@ function showResultThenConfirm(box, text, isError, reloadFn) {
   box.className = `result-box show${isError ? ' error' : ''}`;
   box.textContent = text;
 
+  // 保險：如果這個位置之前已經留著一顆確定按鈕沒被按過，先清掉，避免重複累積
+  const next = box.nextElementSibling;
+  if (next && next.dataset?.confirmBtn === 'true') next.remove();
+
   const btn = document.createElement('button');
   btn.className = 'btn btn-block';
   btn.textContent = '確定';
+  btn.dataset.confirmBtn = 'true';
   btn.style.marginTop = '10px';
   btn.onclick = reloadFn;
   box.insertAdjacentElement('afterend', btn);
@@ -661,7 +666,8 @@ async function loadShop() {
     btn.onclick = async () => {
       const idx = Number(btn.dataset.idx);
       const box = document.getElementById('shop-result');
-      btn.disabled = true;
+      // 每天只能買一件，先把全部商品按鈕都鎖住，避免在確認重整前又點了別的商品造成畫面混亂
+      document.querySelectorAll('#shop-list button').forEach(b => b.disabled = true);
       const { ok, data } = await api('/api/shop/buy', { method: 'POST', body: { itemIndex: idx } });
       if (ok && data.ok) {
         refreshPlaque();
@@ -670,7 +676,7 @@ async function loadShop() {
       } else {
         box.className = 'result-box show error';
         box.textContent = shopErrorText(data.error);
-        btn.disabled = false;
+        document.querySelectorAll('#shop-list button').forEach(b => b.disabled = false);
       }
     };
   });
