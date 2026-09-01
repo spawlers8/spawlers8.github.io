@@ -472,10 +472,14 @@ async function loadBackpack() {
               <span class="weapon-name">${escapeHtml(w.name)}</span>
               <div class="weapon-meta">${escapeHtml(w.style || '')}${w.set ? '　套裝：' + escapeHtml(w.set) : ''}</div>
             </div>
-            <span class="row-value">⚔ ${w.power}</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="row-value">⚔ ${w.power}</span>
+              <button class="btn" data-discard="bag" data-idx="${w.index}" style="padding:6px 10px;font-size:12px">丟棄</button>
+            </div>
           </div>
         `).join('')}
     </div>
+    ${weapons.length >= 2 ? `<p style="font-size:12px;color:var(--ink-soft);margin:-6px 0 16px">想融合升級武學？到「武學坊」分頁操作。</p>` : ''}
     ${data.pendingDrawQueue.length > 0 ? `
       <div class="section-title">待收取（背包已滿時暫存於此）</div>
       <div class="panel">
@@ -485,12 +489,30 @@ async function loadBackpack() {
               <span class="rarity ${w.rarity}">${w.rarity}</span>
               <span class="weapon-name">${escapeHtml(w.name)}</span>
             </div>
-            <span class="row-value">⚔ ${w.power}</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="row-value">⚔ ${w.power}</span>
+              <button class="btn" data-discard="queue" data-idx="${w.index}" style="padding:6px 10px;font-size:12px">丟棄</button>
+            </div>
           </div>
         `).join('')}
       </div>
     ` : ''}
+    <div class="result-box" id="backpack-result"></div>
   `;
+
+  el.querySelectorAll('[data-discard]').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('確定要丟棄這件武學嗎？丟棄後無法復原。')) return;
+      const box = document.getElementById('backpack-result');
+      const { ok, data: rdata } = await api('/api/backpack/discard', {
+        method: 'POST',
+        body: { source: btn.dataset.discard, index: Number(btn.dataset.idx) },
+      });
+      box.className = `result-box show${ok && rdata.ok ? '' : ' error'}`;
+      box.textContent = ok && rdata.ok ? `已丟棄「${rdata.discarded.display}」` : '丟棄失敗，請重新整理再試';
+      if (ok && rdata.ok) loadBackpack();
+    };
+  });
 }
 
 async function loadJianghu() {
