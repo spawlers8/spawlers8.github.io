@@ -117,11 +117,32 @@
   .plaque-stat-label { font-size: 11px; color: #A79C81; margin-top: 2px; }
 
   /* 分頁籤 */
+  .tabs-wrap {
+    position: relative;
+    background: var(--paper-deep);
+    border-bottom: 2px solid var(--ink);
+  }
+  .tabs-wrap::after {
+    content: '›';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--seal);
+    background: linear-gradient(to right, transparent, var(--paper-deep) 65%);
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.2s;
+  }
+  .tabs-wrap.at-end::after { opacity: 0; }
   .tabs {
     display: flex;
-    border-bottom: 2px solid var(--ink);
     overflow-x: auto;
-    background: var(--paper-deep);
   }
   .tab {
     flex: none;
@@ -385,8 +406,10 @@ function renderApp() {
         <button id="btn-logout" style="background:none;border:none;color:#A79C81;font-size:11px;cursor:pointer;font-family:var(--font-body);padding:0">登出</button>
       </div>
     </div>
-    <div class="tabs" id="tabs">
-      ${TABS.map((t, i) => `<button class="tab${i === 0 ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}
+    <div class="tabs-wrap" id="tabs-wrap">
+      <div class="tabs" id="tabs">
+        ${TABS.map((t, i) => `<button class="tab${i === 0 ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}
+      </div>
     </div>
     <div id="views">
       ${TABS.map((t, i) => `<div class="view${i === 0 ? ' active' : ''}" id="view-${t.key}"></div>`).join('')}
@@ -404,6 +427,17 @@ function renderApp() {
     if (!btn) return;
     switchTab(btn.dataset.tab);
   });
+
+  // 分頁籤還能往右滑的時候顯示箭頭提示，滑到底就自動隱藏
+  const tabsEl = document.getElementById('tabs');
+  const tabsWrapEl = document.getElementById('tabs-wrap');
+  function updateTabsScrollHint() {
+    const atEnd = tabsEl.scrollLeft + tabsEl.clientWidth >= tabsEl.scrollWidth - 2;
+    tabsWrapEl.classList.toggle('at-end', atEnd);
+  }
+  tabsEl.addEventListener('scroll', updateTabsScrollHint);
+  updateTabsScrollHint();
+  window.addEventListener('resize', updateTabsScrollHint);
 
   renderStatus();
   loadBackpack();
@@ -439,6 +473,20 @@ function switchTab(key) {
 
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+// 顯示結果訊息後，附上一顆「確定」按鈕，等使用者看完自己按下去才觸發重整，
+// 避免「動作成功 → 立刻整個重整分頁 → 訊息還沒看到就被蓋掉」這種問題
+function showResultThenConfirm(box, text, isError, reloadFn) {
+  box.className = `result-box show${isError ? ' error' : ''}`;
+  box.textContent = text;
+
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-block';
+  btn.textContent = '確定';
+  btn.style.marginTop = '10px';
+  btn.onclick = reloadFn;
+  box.insertAdjacentElement('afterend', btn);
 }
 
 function renderStatus() {
@@ -613,10 +661,17 @@ async function loadShop() {
     btn.onclick = async () => {
       const idx = Number(btn.dataset.idx);
       const box = document.getElementById('shop-result');
+      btn.disabled = true;
       const { ok, data } = await api('/api/shop/buy', { method: 'POST', body: { itemIndex: idx } });
-      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-      box.textContent = data.ok ? '購買成功' : shopErrorText(data.error);
-      if (ok && data.ok) { refreshPlaque(); loadShop(); loadBackpack(); }
+      if (ok && data.ok) {
+        refreshPlaque();
+        loadBackpack();
+        showResultThenConfirm(box, '購買成功', false, () => loadShop());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = shopErrorText(data.error);
+        btn.disabled = false;
+      }
     };
   });
 }
@@ -749,9 +804,12 @@ async function loadSect() {
     btn.onclick = async () => {
       const box = document.getElementById('join-result');
       const { ok, data } = await api('/api/sect/join', { method: 'POST', body: { sectKey: btn.dataset.key } });
-      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-      box.textContent = ok && data.ok ? `已加入 ${data.sectName}` : '加入失敗';
-      if (ok && data.ok) loadSect();
+      if (ok && data.ok) {
+        showResultThenConfirm(box, `已加入 ${data.sectName}`, false, () => loadSect());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '加入失敗';
+      }
     };
   });
 }
@@ -828,19 +886,31 @@ async function loadCombat() {
   document.getElementById('btn-realm-break')?.addEventListener('click', async () => {
     const box = document.getElementById('realm-result');
     const { ok, data } = await api('/api/realm-break/attempt', { method: 'POST' });
-    box.className = `result-box show${ok && data.ok && data.success ? '' : ' error'}`;
-    box.textContent = ok && data.ok
-      ? (data.success ? `突破成功！境界提升至 ${data.newRealm}` : `突破失敗，修為 -${data.lossAmount}`)
-      : '目前無法突破';
-    if (ok && data.ok) { refreshPlaque(); loadCombat(); }
+    if (ok && data.ok) {
+      refreshPlaque();
+      showResultThenConfirm(
+        box,
+        data.success ? `突破成功！境界提升至 ${data.newRealm}` : `突破失敗，修為 -${data.lossAmount}`,
+        !data.success,
+        () => loadCombat()
+      );
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '目前無法突破';
+    }
   });
 
   document.getElementById('btn-invite-accept')?.addEventListener('click', async () => {
     const box = document.getElementById('invite-result');
     const { ok, data } = await api('/api/dungeon/invite/accept', { method: 'POST' });
-    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-    box.textContent = ok && data.ok ? dungeonResultText(data.result) : '接受邀請失敗';
-    if (ok && data.ok) { refreshPlaque(); loadBackpack(); loadCombat(); }
+    if (ok && data.ok) {
+      refreshPlaque();
+      loadBackpack();
+      showResultThenConfirm(box, dungeonResultText(data.result), false, () => loadCombat());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '接受邀請失敗';
+    }
   });
   document.getElementById('btn-invite-decline')?.addEventListener('click', async () => {
     await api('/api/dungeon/invite/decline', { method: 'POST' });
@@ -853,14 +923,18 @@ async function loadCombat() {
       const box = document.getElementById('dungeon-result');
       if (outgoingInviteTarget === targetId) {
         const { ok, data } = await api('/api/dungeon/invite/cancel', { method: 'POST', body: { targetDiscordId: targetId } });
-        if (ok && data.ok) { outgoingInviteTarget = null; box.className = 'result-box show'; box.textContent = '已取消邀請'; }
+        if (ok && data.ok) outgoingInviteTarget = null;
         loadCombat();
         return;
       }
       const { ok, data } = await api('/api/dungeon/invite', { method: 'POST', body: { targetDiscordId: targetId } });
-      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-      box.textContent = ok && data.ok ? `已邀請 ${data.targetName}` : '邀請失敗（對方可能已被邀請或已達上限）';
-      if (ok && data.ok) { outgoingInviteTarget = targetId; loadCombat(); }
+      if (ok && data.ok) {
+        outgoingInviteTarget = targetId;
+        showResultThenConfirm(box, `已邀請 ${data.targetName}`, false, () => loadCombat());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '邀請失敗（對方可能已被邀請或已達上限）';
+      }
     };
   });
 
@@ -988,9 +1062,13 @@ async function loadWorkshop() {
     btn.onclick = async () => {
       const box = document.getElementById('trade-offer-result');
       const { ok, data } = await api('/api/trade/accept', { method: 'POST', body: { offerId: btn.dataset.acceptOffer } });
-      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-      box.textContent = ok && data.ok ? '交換完成' : '邀請已過期或已失效';
-      if (ok && data.ok) { loadBackpack(); loadWorkshop(); }
+      if (ok && data.ok) {
+        loadBackpack();
+        showResultThenConfirm(box, '交換完成', false, () => loadWorkshop());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '邀請已過期或已失效';
+      }
     };
   });
   document.querySelectorAll('[data-reject-offer]').forEach(btn => {
@@ -1166,18 +1244,37 @@ async function loadWorld() {
     btn.onclick = async () => {
       const box = document.getElementById('bounty-result');
       const { ok, data } = await api(`/api/bounty/claim-system/${btn.dataset.claimSystem}`, { method: 'POST' });
-      box.className = `result-box show${ok && data.ok && data.success ? '' : ' error'}`;
-      box.textContent = ok && data.ok ? (data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩` : `挑戰 ${data.bossName} 失敗，修為 -${data.cultivationLost}`) : '通緝已失效';
-      if (ok && data.ok) { refreshPlaque(); loadWorld(); }
+      if (ok && data.ok) {
+        refreshPlaque();
+        showResultThenConfirm(
+          box,
+          data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩` : `挑戰 ${data.bossName} 失敗，修為 -${data.cultivationLost}`,
+          !data.success,
+          () => loadWorld()
+        );
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '通緝已失效';
+      }
     };
   });
   document.querySelectorAll('[data-claim-player]').forEach(btn => {
     btn.onclick = async () => {
       const box = document.getElementById('bounty-result');
       const { ok, data } = await api(`/api/bounty/claim-player/${btn.dataset.claimPlayer}`, { method: 'POST' });
-      box.className = `result-box show${ok && data.ok && data.success ? '' : ' error'}`;
-      box.textContent = ok && data.ok ? (data.success ? `完成通緝！獲得 ${data.reward} 銀兩` : `挑戰失敗，對方獲得防守獎勵`) : '通緝已失效';
-      if (ok && data.ok) { refreshPlaque(); loadBackpack(); loadWorld(); }
+      if (ok && data.ok) {
+        refreshPlaque();
+        loadBackpack();
+        showResultThenConfirm(
+          box,
+          data.success ? `完成通緝！獲得 ${data.reward} 銀兩` : `挑戰失敗，對方獲得防守獎勵`,
+          !data.success,
+          () => loadWorld()
+        );
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '通緝已失效';
+      }
     };
   });
 
@@ -1195,17 +1292,24 @@ async function loadWorld() {
       method: 'POST',
       body: { targetDiscordId: search.data.discordId, amount, durationDays: days },
     });
-    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-    box.textContent = ok && data.ok ? `已對 ${data.targetName} 發布通緝` : '發布失敗（銀兩不足或對方遁形中）';
-    if (ok && data.ok) { refreshPlaque(); loadWorld(); }
+    if (ok && data.ok) {
+      refreshPlaque();
+      showResultThenConfirm(box, `已對 ${data.targetName} 發布通緝`, false, () => loadWorld());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '發布失敗（銀兩不足或對方遁形中）';
+    }
   };
 
   document.getElementById('btn-sneaky-toggle')?.addEventListener('click', async () => {
     const box = document.getElementById('sneaky-result');
     const { ok, data } = await api('/api/sneaky/toggle', { method: 'POST' });
-    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-    box.textContent = ok && data.ok ? (data.on ? '已開啟' : '已關閉') : '排行前五無法開啟';
-    if (ok && data.ok) loadWorld();
+    if (ok && data.ok) {
+      showResultThenConfirm(box, data.on ? '已開啟' : '已關閉', false, () => loadWorld());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '排行前五無法開啟';
+    }
   });
   document.getElementById('btn-sneaky-clear')?.addEventListener('click', async function () {
     const box = document.getElementById('sneaky-result');
@@ -1297,9 +1401,7 @@ async function loadRedeem() {
     const box = document.getElementById('sync-now-result');
     const { ok: sOk, data: sData } = await api('/api/redeem-codes/sync-now', { method: 'POST' });
     if (sOk && sData.ok) {
-      box.className = 'result-box show';
-      box.textContent = '同步完成，已更新最新的 Discord 標記狀態';
-      loadRedeem();
+      showResultThenConfirm(box, '同步完成，已更新最新的 Discord 標記狀態', false, () => loadRedeem());
     } else {
       box.className = 'result-box show error';
       box.textContent = sData.error === 'COOLDOWN'
@@ -1307,7 +1409,8 @@ async function loadRedeem() {
         : sData.error === 'BOT_NOT_READY'
           ? 'bot 剛啟動還沒準備好，稍後再試'
           : '同步失敗，請稍後再試';
-      loadRedeem();
+      this.disabled = false;
+      this.textContent = '🔄 立即同步 Discord 標記';
     }
   };
 
@@ -1326,11 +1429,13 @@ async function loadRedeem() {
     if (!code) return;
 
     const { ok, data: rdata } = await api('/api/redeem-codes/submit', { method: 'POST', body: { code } });
-    box.className = `result-box show${ok && rdata.ok ? '' : ' error'}`;
-    box.textContent = ok && rdata.ok
-      ? `已回報「${rdata.code}」，感謝分享！`
-      : (rdata.error === 'CODE_ALREADY_EXISTS' ? '這組碼已經有人回報過了' : '回報失敗，請重試');
-    if (ok && rdata.ok) { input.value = ''; loadRedeem(); }
+    if (ok && rdata.ok) {
+      input.value = '';
+      showResultThenConfirm(box, `已回報「${rdata.code}」，感謝分享！`, false, () => loadRedeem());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = rdata.error === 'CODE_ALREADY_EXISTS' ? '這組碼已經有人回報過了' : '回報失敗，請重試';
+    }
   };
 }
 
