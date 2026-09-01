@@ -706,21 +706,24 @@ function renderGacha() {
 
   document.getElementById('btn-pull1').onclick = async () => {
     const { ok, data } = await api('/api/gacha/single', { method: 'POST' });
-    renderGachaResult(ok && data.ok ? [data.result] : null, data.error);
+    renderGachaResult(ok && data.ok ? [data.result] : null, data);
     if (ok && data.ok) { refreshPlaque(); loadBackpack(); }
   };
 
   document.getElementById('btn-pull10').onclick = async () => {
     const { ok, data } = await api('/api/gacha/multi', { method: 'POST' });
-    renderGachaResult(ok && data.ok ? data.results : null, data.error);
+    renderGachaResult(ok && data.ok ? data.results : null, data);
     if (ok && data.ok) { refreshPlaque(); loadBackpack(); }
   };
 }
 
-function renderGachaResult(weapons, errorCode) {
+function renderGachaResult(weapons, errData) {
   const el = document.getElementById('gacha-result');
   if (!weapons) {
-    el.innerHTML = `<div class="result-box show error">${errorCode === 'NOT_ENOUGH_SILVER' ? '銀兩不足' : '抽卡失敗'}</div>`;
+    const text = errData?.error === 'NOT_ENOUGH_SILVER'
+      ? `銀兩不足，需要 ${errData.need}，目前只有 ${errData.have}`
+      : '抽卡失敗，請重試';
+    el.innerHTML = `<div class="result-box show error">${text}</div>`;
     return;
   }
   const sorted = [...weapons].sort((a, b) => (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0));
