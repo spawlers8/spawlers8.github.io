@@ -695,22 +695,35 @@ async function loadSect() {
       </div>
       <div class="section-title">捐獻倉庫</div>
       <div class="panel">
-        <div class="btn-row">
+        <div class="btn-row" id="donate-buttons">
           <button class="btn" data-amt="100">捐 100</button>
           <button class="btn" data-amt="500">捐 500</button>
           <button class="btn" data-amt="1000">捐 1000</button>
         </div>
         <div class="result-box" id="donate-result"></div>
+        <button class="btn btn-block" id="btn-donate-confirm" style="margin-top:10px;display:none">確定</button>
       </div>
     `;
     el.querySelectorAll('[data-amt]').forEach(btn => {
-      btn.onclick = async () => {
-        const amount = Number(btn.dataset.amt);
+      btn.onclick = async function () {
+        const amount = Number(this.dataset.amt);
         const box = document.getElementById('donate-result');
+        document.querySelectorAll('#donate-buttons .btn').forEach(b => b.disabled = true);
         const { ok, data } = await api('/api/sect/vault/donate-silver', { method: 'POST', body: { amount } });
         box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-        box.textContent = ok && data.ok ? `捐獻成功，倉庫加成 +${data.vaultBonusPercent}%` : '銀兩不足';
-        if (ok && data.ok) { refreshPlaque(); loadSect(); }
+        box.textContent = ok && data.ok
+          ? `已捐獻 ${amount} 銀兩，倉庫加成 +${data.vaultBonusPercent}%（原本 +${my.vaultBonusPercent}%）`
+          : (data.error === 'NOT_ENOUGH_SILVER' ? '銀兩不足' : '捐獻失敗，請重試');
+
+        if (ok && data.ok) {
+          refreshPlaque();
+          document.getElementById('donate-buttons').style.display = 'none';
+          const confirmBtn = document.getElementById('btn-donate-confirm');
+          confirmBtn.style.display = 'block';
+          confirmBtn.onclick = () => loadSect();
+        } else {
+          document.querySelectorAll('#donate-buttons .btn').forEach(b => b.disabled = false);
+        }
       };
     });
     return;
