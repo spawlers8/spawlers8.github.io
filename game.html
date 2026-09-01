@@ -1313,7 +1313,9 @@ async function loadWorld() {
         bounty.player.map(b => `
           <div class="row">
             <span class="row-label">${escapeHtml(b.publisherName)} 通緝 ${escapeHtml(b.targetName)}（💰${b.reward}，剩 ${b.remainingMinutes} 分）</span>
-            <button class="btn" data-claim-player="${b.id}">接取</button>
+            ${b.canClaim
+              ? `<button class="btn" data-claim-player="${b.id}">接取</button>`
+              : `<span class="weapon-meta">${b.publisherId === state.profile?.discordId ? '你發布的' : '你是目標'}</span>`}
           </div>
         `).join('')}
       <div class="result-box" id="player-bounty-result"></div>
