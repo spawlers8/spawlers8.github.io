@@ -1304,6 +1304,7 @@ async function loadWorld() {
             <button class="btn" data-claim-system="${b.id}">接取</button>
           </div>
         `).join('')}
+      <div class="result-box" id="system-bounty-result"></div>
     </div>
 
     <div class="section-title">玩家通緝</div>
@@ -1315,7 +1316,7 @@ async function loadWorld() {
             <button class="btn" data-claim-player="${b.id}">接取</button>
           </div>
         `).join('')}
-      <div class="result-box" id="bounty-result"></div>
+      <div class="result-box" id="player-bounty-result"></div>
     </div>
 
     <div class="section-title">發布通緝</div>
@@ -1324,6 +1325,17 @@ async function loadWorld() {
         <option value="">選擇通緝目標</option>
         ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}（戰力 ${p.power}）</option>`).join('')}
       </select>
+      <div id="bounty-weapon-section" style="display:none;margin-bottom:8px">
+        <label style="font-size:12px;color:var(--ink-soft)">指定要求交出的武學（可不選）：</label>
+        <select id="bounty-weapon-select" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:6px">
+          <option value="-1">不指定武學</option>
+        </select>
+        <select id="bounty-weapon-dest" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
+          <option value="acceptor">武學歸「接取通緝的人」</option>
+          <option value="publisher">武學歸「發布通緝的我」</option>
+          <option value="destroy">武學直接銷毀</option>
+        </select>
+      </div>
       <div class="btn-row">
         <input type="number" id="bounty-amount" placeholder="懸賞銀兩" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
         <input type="number" id="bounty-days" placeholder="天數" style="width:80px;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
@@ -1356,7 +1368,7 @@ async function loadWorld() {
 
   document.querySelectorAll('[data-claim-system]').forEach(btn => {
     btn.onclick = async () => {
-      const box = document.getElementById('bounty-result');
+      const box = document.getElementById('system-bounty-result');
       const { ok, data } = await api(`/api/bounty/claim-system/${btn.dataset.claimSystem}`, { method: 'POST' });
       if (ok && data.ok) {
         refreshPlaque();
@@ -1374,7 +1386,7 @@ async function loadWorld() {
   });
   document.querySelectorAll('[data-claim-player]').forEach(btn => {
     btn.onclick = async () => {
-      const box = document.getElementById('bounty-result');
+      const box = document.getElementById('player-bounty-result');
       const { ok, data } = await api(`/api/bounty/claim-player/${btn.dataset.claimPlayer}`, { method: 'POST' });
       if (ok && data.ok) {
         refreshPlaque();
@@ -1392,16 +1404,34 @@ async function loadWorld() {
     };
   });
 
+  document.getElementById('bounty-target-select')?.addEventListener('change', async function () {
+    const targetDiscordId = this.value;
+    const section = document.getElementById('bounty-weapon-section');
+    const weaponSelect = document.getElementById('bounty-weapon-select');
+    if (!targetDiscordId) { section.style.display = 'none'; return; }
+
+    const { ok, data } = await api(`/api/profile/${targetDiscordId}`);
+    weaponSelect.innerHTML = `<option value="-1">不指定武學</option>`;
+    if (ok && data.weapons.length > 0) {
+      weaponSelect.innerHTML += data.weapons
+        .map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} ⚔${w.power}）</option>`)
+        .join('');
+    }
+    section.style.display = 'block';
+  });
+
   document.getElementById('btn-publish-bounty').onclick = async () => {
     const box = document.getElementById('publish-result');
     const targetDiscordId = document.getElementById('bounty-target-select').value;
     const amount = Number(document.getElementById('bounty-amount').value);
     const days = Number(document.getElementById('bounty-days').value);
+    const weaponIndex = Number(document.getElementById('bounty-weapon-select')?.value ?? -1);
+    const weaponDest = document.getElementById('bounty-weapon-dest')?.value || 'none';
     if (!targetDiscordId || !amount || !days) { box.className = 'result-box show error'; box.textContent = '請填寫完整資料'; return; }
 
     const { ok, data } = await api('/api/bounty/publish', {
       method: 'POST',
-      body: { targetDiscordId, amount, durationDays: days },
+      body: { targetDiscordId, amount, durationDays: days, weaponIndex, weaponDest: weaponIndex >= 0 ? weaponDest : 'none' },
     });
     if (ok && data.ok) {
       refreshPlaque();
