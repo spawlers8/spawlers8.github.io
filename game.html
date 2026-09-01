@@ -841,9 +841,10 @@ async function loadCombat() {
   const el = document.getElementById('view-combat');
   el.innerHTML = `<div class="loading">整軍備戰中……</div>`;
 
-  const [realmRes, partnersRes, pendingRes, outgoingRes] = await Promise.all([
-    api('/api/realm-break'), api('/api/dungeon/partners'), api('/api/dungeon/pending-invite'), api('/api/dungeon/outgoing-invite'),
+  const [realmRes, partnersRes, pendingRes, outgoingRes, allPlayersRes] = await Promise.all([
+    api('/api/realm-break'), api('/api/dungeon/partners'), api('/api/dungeon/pending-invite'), api('/api/dungeon/outgoing-invite'), api('/api/profile/list-all'),
   ]);
+  const allPlayers = allPlayersRes.ok ? allPlayersRes.data.players : [];
 
   // 用後端真實資料同步 outgoingInviteTarget，不管重新整理或切分頁都能正確反映
   const outgoing = outgoingRes.ok ? outgoingRes.data : { hasOutgoing: false };
@@ -909,10 +910,12 @@ async function loadCombat() {
   const searchHtml = `
     <div class="section-title">尋人挑戰</div>
     <div class="panel">
-      <div class="btn-row">
-        <input type="text" id="challenge-name" placeholder="輸入俠客名稱" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
-        <button class="btn" id="btn-search-target">查詢</button>
-      </div>
+      ${allPlayers.length === 0 ? `<div class="empty">目前沒有其他玩家</div>` : `
+        <select id="challenge-target-select" style="width:100%;padding:10px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
+          <option value="">請選擇玩家</option>
+          ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}</option>`).join('')}
+        </select>
+      `}
       <div id="challenge-target"></div>
     </div>
   `;
@@ -982,23 +985,24 @@ async function loadCombat() {
     };
   });
 
-  document.getElementById('btn-search-target').onclick = async () => {
-    const name = document.getElementById('challenge-name').value.trim();
+  document.getElementById('challenge-target-select')?.addEventListener('change', async function () {
+    const targetDiscordId = this.value;
     const box = document.getElementById('challenge-target');
-    if (!name) return;
+    if (!targetDiscordId) { box.innerHTML = ''; return; }
+
     box.innerHTML = `<div class="loading">查訪中……</div>`;
-    const { ok, data } = await api(`/api/profile/search?name=${encodeURIComponent(name)}`);
-    if (!ok) { box.innerHTML = `<div class="empty">找不到這位俠客</div>`; return; }
+    const { ok, data } = await api(`/api/profile/${targetDiscordId}`);
+    if (!ok) { box.innerHTML = `<div class="empty">讀取失敗，請重試</div>`; return; }
     box.innerHTML = `
       <div class="row">
         <span class="row-label">${escapeHtml(data.name)}（戰力 ${data.power}）</span>
-        <button class="btn btn-primary" id="btn-do-challenge" data-target="${data.discordId}">挑戰</button>
+        <button class="btn btn-primary" id="btn-do-challenge">挑戰</button>
       </div>
       <div class="result-box" id="challenge-result"></div>
     `;
     document.getElementById('btn-do-challenge').onclick = async () => {
       const rbox = document.getElementById('challenge-result');
-      const { ok, data: cdata } = await api('/api/challenge', { method: 'POST', body: { targetDiscordId: data.discordId } });
+      const { ok, data: cdata } = await api('/api/challenge', { method: 'POST', body: { targetDiscordId } });
       rbox.className = `result-box show${ok && cdata.ok && cdata.success ? '' : ' error'}`;
       if (!ok || !cdata.ok) { rbox.textContent = challengeErrorText(cdata.error); return; }
       let text = cdata.success ? `挑戰成功！獲得 ${cdata.reward.silver} 銀兩` : `挑戰失敗，安慰獎 ${cdata.reward.silver} 銀兩`;
@@ -1008,7 +1012,7 @@ async function loadCombat() {
       rbox.textContent = text;
       refreshPlaque();
     };
-  };
+  });
 }
 
 function dungeonResultText(r) {
@@ -1226,11 +1230,12 @@ async function loadWorld() {
   const el = document.getElementById('view-world');
   el.innerHTML = `<div class="loading">打探江湖消息……</div>`;
 
-  const [bountyRes, eventRes, sneakyRes] = await Promise.all([api('/api/bounty'), api('/api/world-event'), api('/api/sneaky')]);
+  const [bountyRes, eventRes, sneakyRes, allPlayersRes] = await Promise.all([api('/api/bounty'), api('/api/world-event'), api('/api/sneaky'), api('/api/profile/list-all')]);
 
   const bounty = bountyRes.ok ? bountyRes.data : { system: [], player: [] };
   const events = eventRes.ok ? eventRes.data.events : [];
   const sneaky = sneakyRes.ok ? sneakyRes.data : null;
+  const allPlayers = allPlayersRes.ok ? allPlayersRes.data.players : [];
 
   el.innerHTML = `
     <div class="section-title">系統通緝</div>
@@ -1258,10 +1263,11 @@ async function loadWorld() {
 
     <div class="section-title">發布通緝</div>
     <div class="panel">
+      <select id="bounty-target-select" style="width:100%;padding:10px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
+        <option value="">選擇通緝目標</option>
+        ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}</option>`).join('')}
+      </select>
       <div class="btn-row">
-        <input type="text" id="bounty-target" placeholder="目標名稱" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
-      </div>
-      <div class="btn-row" style="margin-top:8px">
         <input type="number" id="bounty-amount" placeholder="懸賞銀兩" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
         <input type="number" id="bounty-days" placeholder="天數" style="width:80px;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
       </div>
@@ -1331,17 +1337,14 @@ async function loadWorld() {
 
   document.getElementById('btn-publish-bounty').onclick = async () => {
     const box = document.getElementById('publish-result');
-    const name = document.getElementById('bounty-target').value.trim();
+    const targetDiscordId = document.getElementById('bounty-target-select').value;
     const amount = Number(document.getElementById('bounty-amount').value);
     const days = Number(document.getElementById('bounty-days').value);
-    if (!name || !amount || !days) { box.className = 'result-box show error'; box.textContent = '請填寫完整資料'; return; }
-
-    const search = await api(`/api/profile/search?name=${encodeURIComponent(name)}`);
-    if (!search.ok) { box.className = 'result-box show error'; box.textContent = '找不到這位俠客'; return; }
+    if (!targetDiscordId || !amount || !days) { box.className = 'result-box show error'; box.textContent = '請填寫完整資料'; return; }
 
     const { ok, data } = await api('/api/bounty/publish', {
       method: 'POST',
-      body: { targetDiscordId: search.data.discordId, amount, durationDays: days },
+      body: { targetDiscordId, amount, durationDays: days },
     });
     if (ok && data.ok) {
       refreshPlaque();
