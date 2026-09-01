@@ -1144,6 +1144,7 @@ async function loadWorld() {
           ${sneaky.canFreeGachaToday ? `<button class="btn btn-primary" id="btn-sneaky-gacha">今日免費抽卡</button>` : ''}
         </div>
         <div class="result-box" id="sneaky-result"></div>
+        <button class="btn btn-block" id="btn-sneaky-confirm" style="margin-top:10px;display:none">確定</button>
       </div>
     ` : ''}
   `;
@@ -1193,20 +1194,44 @@ async function loadWorld() {
     box.textContent = ok && data.ok ? (data.on ? '已開啟' : '已關閉') : '排行前五無法開啟';
     if (ok && data.ok) loadWorld();
   });
-  document.getElementById('btn-sneaky-clear')?.addEventListener('click', async () => {
+  document.getElementById('btn-sneaky-clear')?.addEventListener('click', async function () {
     const box = document.getElementById('sneaky-result');
+    this.disabled = true;
     const { ok, data } = await api('/api/sneaky/clear-pollution', { method: 'POST' });
     box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
     box.textContent = ok && data.ok ? '汙染已清除' : '銀兩不足';
-    if (ok && data.ok) { refreshPlaque(); loadWorld(); }
+    if (ok && data.ok) {
+      refreshPlaque();
+      showSneakyConfirm();
+    } else {
+      this.disabled = false;
+    }
   });
-  document.getElementById('btn-sneaky-gacha')?.addEventListener('click', async () => {
+  document.getElementById('btn-sneaky-gacha')?.addEventListener('click', async function () {
     const box = document.getElementById('sneaky-result');
+    this.disabled = true;
+    this.textContent = '抽卡中……';
     const { ok, data } = await api('/api/sneaky/free-gacha', { method: 'POST' });
     box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
-    box.textContent = ok && data.ok ? `抽到了 ${data.weapon.display}` : '今日已使用過';
-    if (ok && data.ok) { loadBackpack(); loadWorld(); }
+    box.textContent = ok && data.ok ? `抽到了 ${data.weapon.display}${data.addedToBag ? '' : '（背包已滿，已存入待收取）'}` : '今日已使用過';
+    if (ok && data.ok) {
+      loadBackpack();
+      showSneakyConfirm();
+    } else {
+      this.disabled = false;
+      this.textContent = '今日免費抽卡';
+    }
   });
+}
+
+// 猥瑣升級區塊共用：顯示「確定」按鈕，讓使用者看完結果再手動重新整理這個分頁
+function showSneakyConfirm() {
+  document.getElementById('btn-sneaky-clear')?.setAttribute('style', 'display:none');
+  document.getElementById('btn-sneaky-gacha')?.setAttribute('style', 'display:none');
+  const confirmBtn = document.getElementById('btn-sneaky-confirm');
+  if (!confirmBtn) return;
+  confirmBtn.style.display = 'block';
+  confirmBtn.onclick = () => loadWorld();
 }
 
 // ── 兌換碼頁 ────────────────────────────────────
