@@ -913,7 +913,7 @@ async function loadCombat() {
       ${allPlayers.length === 0 ? `<div class="empty">目前沒有其他玩家</div>` : `
         <select id="challenge-target-select" style="width:100%;padding:10px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
           <option value="">請選擇玩家</option>
-          ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}</option>`).join('')}
+          ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}（戰力 ${p.power}）</option>`).join('')}
         </select>
       `}
       <div id="challenge-target"></div>
@@ -1265,7 +1265,7 @@ async function loadWorld() {
     <div class="panel">
       <select id="bounty-target-select" style="width:100%;padding:10px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
         <option value="">選擇通緝目標</option>
-        ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}</option>`).join('')}
+        ${allPlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}（戰力 ${p.power}）</option>`).join('')}
       </select>
       <div class="btn-row">
         <input type="number" id="bounty-amount" placeholder="懸賞銀兩" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
