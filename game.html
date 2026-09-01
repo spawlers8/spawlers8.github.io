@@ -876,6 +876,7 @@ async function loadCombat() {
   const partners = partnersRes.ok && partnersRes.data.canJoin !== false ? (partnersRes.data.partners || []) : [];
   const partnersHtml = `
     <div class="section-title">組隊副本${!pending?.hasPending ? '' : '（其他人選）'}</div>
+    <div class="result-box" id="dungeon-result"></div>
     <div class="panel" id="partners-list">
       ${partnersRes.ok && partnersRes.data.canJoin === false ? `<div class="empty">今日副本次數已達上限</div>` :
         partners.length === 0 ? `<div class="empty">目前沒有其他可組隊的俠客</div>` :
@@ -886,7 +887,6 @@ async function loadCombat() {
           </div>
         `).join('')}
     </div>
-    <div class="result-box" id="dungeon-result"></div>
   `;
 
   const searchHtml = `
