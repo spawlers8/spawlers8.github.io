@@ -1238,8 +1238,13 @@ function showSneakyConfirm() {
 async function loadRedeem() {
   const el = document.getElementById('view-redeem');
   el.innerHTML = `<div class="loading">查詢兌換碼中……</div>`;
-  const { ok, data } = await api('/api/redeem-codes');
+  const [{ ok, data }, syncRes] = await Promise.all([
+    api('/api/redeem-codes'),
+    api('/api/redeem-codes/sync-status'),
+  ]);
   if (!ok) { el.innerHTML = `<div class="empty">讀取失敗</div>`; return; }
+
+  const sync = syncRes.ok ? syncRes.data : { canSyncNow: true, remainSeconds: 0 };
 
   el.innerHTML = `
     <div class="section-title">回報新的兌換碼</div>
@@ -1252,7 +1257,12 @@ async function loadRedeem() {
       <div class="result-box" id="submit-code-result"></div>
     </div>
 
-    <div class="section-title">近期兌換碼</div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>近期兌換碼</span>
+      <button class="btn" id="btn-sync-now" style="font-size:12px;padding:6px 12px" ${sync.canSyncNow ? '' : 'disabled'}>
+        ${sync.canSyncNow ? '🔄 立即同步 Discord 標記' : `冷卻中（${sync.remainSeconds}s）`}
+      </button>
+    </div>
     <div class="panel">
       ${data.codes.length === 0 ? `<div class="empty">目前沒有有效的兌換碼</div>` :
         data.codes.map(c => `
@@ -1265,7 +1275,28 @@ async function loadRedeem() {
           </div>
         `).join('')}
     </div>
+    <div class="result-box" id="sync-now-result"></div>
   `;
+
+  document.getElementById('btn-sync-now').onclick = async function () {
+    this.disabled = true;
+    this.textContent = '同步中……';
+    const box = document.getElementById('sync-now-result');
+    const { ok: sOk, data: sData } = await api('/api/redeem-codes/sync-now', { method: 'POST' });
+    if (sOk && sData.ok) {
+      box.className = 'result-box show';
+      box.textContent = '同步完成，已更新最新的 Discord 標記狀態';
+      loadRedeem();
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = sData.error === 'COOLDOWN'
+        ? `冷卻中，還要等 ${sData.remainSeconds} 秒`
+        : sData.error === 'BOT_NOT_READY'
+          ? 'bot 剛啟動還沒準備好，稍後再試'
+          : '同步失敗，請稍後再試';
+      loadRedeem();
+    }
+  };
 
   document.querySelectorAll('[data-code]').forEach(btn => {
     btn.onclick = async () => {
