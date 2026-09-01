@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>江湖行 · 武俠小遊戲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EDE6D3;
+    --paper-deep: #DED2B0;
+    --panel: #F4EEDD;
+    --ink: #2A2420;
+    --ink-soft: #6B6152;
+    --seal: #A32F26;
+    --seal-dark: #7E231C;
+    --brass: #8C6A2F;
+    --jade: #435F45;
+    --border: #B9A97D;
+    --border-soft: #CBBE95;
+    --font-display: "Noto Serif TC", serif;
+    --font-body: "Noto Sans TC", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(163,47,38,0.05) 0, transparent 45%),
+      radial-gradient(circle at 85% 92%, rgba(140,106,47,0.06) 0, transparent 45%);
+    color: var(--ink);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  a { color: inherit; }
+
+  .app { max-width: 640px; margin: 0 auto; padding: 0 0 64px; min-height: 100vh; }
+
+  /* 登入畫面 */
+  .gate {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 32px;
+  }
+  .gate-mark {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 15px;
+    letter-spacing: 0.3em;
+    color: var(--seal);
+    margin-bottom: 18px;
+  }
+  .gate h1 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 44px;
+    line-height: 1.3;
+    margin-bottom: 14px;
+  }
+  .gate p {
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 320px;
+    margin-bottom: 36px;
+  }
+  .seal-btn {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--panel);
+    background: var(--seal);
+    border: none;
+    padding: 15px 40px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.15s;
+  }
+  .seal-btn:hover { background: var(--seal-dark); }
+  .seal-btn:active { transform: translateY(1px); }
+
+  /* 身分門牌 */
+  .plaque {
+    background: var(--ink);
+    color: var(--panel);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .plaque-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .plaque-realm {
+    font-size: 12px;
+    color: #B9AE93;
+    margin-top: 3px;
+  }
+  .plaque-stats { display: flex; gap: 22px; text-align: right; }
+  .plaque-stat-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 18px;
+    color: #E8C97A;
+  }
+  .plaque-stat-label { font-size: 11px; color: #A79C81; margin-top: 2px; }
+
+  /* 分頁籤 */
+  .tabs {
+    display: flex;
+    border-bottom: 2px solid var(--ink);
+    overflow-x: auto;
+    background: var(--paper-deep);
+  }
+  .tab {
+    flex: none;
+    padding: 13px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: var(--font-body);
+  }
+  .tab.active {
+    color: var(--ink);
+    font-weight: 700;
+    border-bottom-color: var(--seal);
+  }
+
+  .view { padding: 24px 20px; display: none; }
+  .view.active { display: block; }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 14px;
+  }
+  .row:last-child { border-bottom: none; }
+  .row-label { color: var(--ink-soft); }
+  .row-value { font-weight: 700; }
+  .row-value.brass { color: var(--brass); font-family: var(--font-display); }
+
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 14px;
+    padding: 11px 22px;
+    border: 1.5px solid var(--ink);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn:hover { background: var(--ink); color: var(--panel); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:disabled:hover { background: var(--panel); color: var(--ink); }
+  .btn-primary { background: var(--seal); color: var(--panel); border-color: var(--seal); }
+  .btn-primary:hover { background: var(--seal-dark); border-color: var(--seal-dark); }
+  .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+  .btn-row .btn { flex: 1; }
+
+  .weapon {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 14px;
+  }
+  .weapon:last-child { border-bottom: none; }
+  .weapon-name { font-weight: 500; }
+  .weapon-meta { color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+  .rarity {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border: 1px solid currentColor;
+    margin-right: 8px;
+  }
+  .rarity.N, .rarity.R { color: var(--ink-soft); }
+  .rarity.SR { color: var(--jade); }
+  .rarity.SSR { color: var(--brass); }
+  .rarity.UR { color: var(--seal); }
+
+  .empty {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 13px;
+    padding: 24px 0;
+  }
+
+  .result-box {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: var(--paper-deep);
+    border-left: 3px solid var(--seal);
+    font-size: 14px;
+    display: none;
+  }
+  .result-box.show { display: block; }
+  .result-box.error { border-left-color: var(--ink-soft); color: var(--ink-soft); }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 14px;
+  }
+  .rank-item:last-child { border-bottom: none; }
+  .rank-num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    width: 22px;
+    color: var(--ink-soft);
+  }
+  .rank-item:nth-child(1) .rank-num,
+  .rank-item:nth-child(2) .rank-num,
+  .rank-item:nth-child(3) .rank-num { color: var(--seal); }
+  .rank-name { flex: 1; }
+  .rank-power { color: var(--brass); font-weight: 700; }
+
+  .loading { text-align: center; padding: 40px 0; color: var(--ink-soft); font-size: 13px; }
+
+  .sect-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .sect-row:last-child { border-bottom: none; }
+  .sect-info { font-size: 14px; }
+  .sect-name { font-weight: 700; }
+  .sect-detail { color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+
+  @media (max-width: 420px) {
+    .plaque { padding: 16px 18px; }
+    .plaque-stats { gap: 14px; }
+    .view { padding: 18px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="loading">江湖事，慢慢查……</div>
+</div>
+
+<script>
+// 換成你自己 Northflank 部署的網域
+const API_BASE = 'https://site--wuxia--99glkqm9n4bx.code.run';
+
+const $app = document.getElementById('app');
+let state = { loggedIn: false, profile: null };
+
+async function api(path, opts = {}) {
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      credentials: 'include',
+      headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
+      method: opts.method || 'GET',
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    let data = {};
+    try { data = await res.json(); } catch {}
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    // 連不上伺服器（離線、伺服器重啟中、CORS 設定問題等）
+    return { ok: false, status: 0, data: { error: 'NETWORK_ERROR' } };
+  }
+}
+
+const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
+let outgoingInviteTarget = null; // 追蹤自己目前發出去、還沒被回應的副本邀請對象
+
+async function boot() {
+  const { ok, data } = await api('/api/auth/me');
+  if (!ok && data.error === 'NETWORK_ERROR') {
+    $app.innerHTML = `<div class="gate"><p style="max-width:280px">連不上江湖伺服器，稍後再試一次，或重新整理頁面。</p></div>`;
+    return;
+  }
+  if (!data.loggedIn) { renderGate(); return; }
+  state.loggedIn = true;
+  const profileRes = await api('/api/profile/me');
+  if (!profileRes.ok) { renderGate(); return; }
+  state.profile = profileRes.data;
+  renderApp();
+}
+
+function renderGate() {
+  $app.innerHTML = `
+    <div class="gate">
+      <div class="gate-mark">心結派 · 江湖行</div>
+      <h1>踏入江湖</h1>
+      <p>用 Discord 帳號登入，接續你在門派裡的俠客身分——背包、境界、銀兩，都是同一份。</p>
+      <button class="seal-btn" onclick="location.href='${API_BASE}/api/auth/login'">用 Discord 登入</button>
+    </div>
+  `;
+}
+
+const TABS = [
+  { key: 'status', label: '狀態' },
+  { key: 'backpack', label: '背包' },
+  { key: 'jianghu', label: '江湖事務' },
+  { key: 'shop', label: '商店' },
+  { key: 'gacha', label: '抽卡' },
+  { key: 'sect', label: '門派' },
+  { key: 'combat', label: '對戰' },
+  { key: 'workshop', label: '武學坊' },
+  { key: 'world', label: '江湖' },
+  { key: 'redeem', label: '兌換碼' },
+];
+
+function renderApp() {
+  const p = state.profile;
+  $app.innerHTML = `
+    <div class="plaque">
+      <div>
+        <div class="plaque-name">${escapeHtml(p.name)}</div>
+        <div class="plaque-realm">${escapeHtml(p.realm)}</div>
+      </div>
+      <div class="plaque-stats">
+        <div>
+          <div class="plaque-stat-num">${p.silver.toLocaleString()}</div>
+          <div class="plaque-stat-label">銀兩</div>
+        </div>
+        <div>
+          <div class="plaque-stat-num">${p.power.toLocaleString()}</div>
+          <div class="plaque-stat-label">戰力</div>
+        </div>
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      ${TABS.map((t, i) => `<button class="tab${i === 0 ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}
+    </div>
+    <div id="views">
+      ${TABS.map((t, i) => `<div class="view${i === 0 ? ' active' : ''}" id="view-${t.key}"></div>`).join('')}
+    </div>
+  `;
+
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    switchTab(btn.dataset.tab);
+  });
+
+  renderStatus();
+  loadBackpack();
+  loadJianghu();
+  loadShop();
+  renderGacha();
+  loadSect();
+  loadCombat();
+  loadWorkshop();
+  loadWorld();
+  loadRedeem();
+}
+
+function switchTab(key) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === key));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === `view-${key}`));
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function renderStatus() {
+  const p = state.profile;
+  const el = document.getElementById('view-status');
+  el.innerHTML = `
+    <div class="section-title">俠客履歷</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">境界</span><span class="row-value">${escapeHtml(p.realm)}</span></div>
+      <div class="row"><span class="row-label">修為</span><span class="row-value">${p.cultivation.toLocaleString()}</span></div>
+      <div class="row"><span class="row-label">戰力</span><span class="row-value">${p.power.toLocaleString()}</span></div>
+      <div class="row"><span class="row-label">銀兩</span><span class="row-value brass">${p.silver.toLocaleString()}</span></div>
+      ${p.sect ? `<div class="row"><span class="row-label">門派</span><span class="row-value">${escapeHtml(p.sect.name)}・${escapeHtml(p.sect.rank)}</span></div>` : `<div class="row"><span class="row-label">門派</span><span class="row-value">尚未加入</span></div>`}
+    </div>
+    <div class="section-title">抽卡保底</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">距 SSR 保底</span><span class="row-value">${p.pity.ssr} / ${p.pity.ssrNeed}</span></div>
+      <div class="row"><span class="row-label">距 UR 保底</span><span class="row-value">${p.pity.ur} / ${p.pity.urNeed}</span></div>
+    </div>
+    ${p.activeItems.length > 0 ? `
+      <div class="section-title">生效中</div>
+      <div class="panel">
+        ${p.activeItems.map(it => `<div class="row"><span class="row-label">${escapeHtml(it.label)}</span><span class="row-value">${it.expireAt ? new Date(it.expireAt).toLocaleString('zh-TW') : ''}</span></div>`).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+
+async function loadBackpack() {
+  const el = document.getElementById('view-backpack');
+  el.innerHTML = `<div class="loading">翻找背包中……</div>`;
+  const { ok, data } = await api('/api/backpack/me');
+  if (!ok) { el.innerHTML = `<div class="empty">背包讀取失敗，請重新整理再試</div>`; return; }
+  state.backpack = data;
+
+  const weapons = [...data.weapons].sort((a, b) => (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0));
+
+  el.innerHTML = `
+    <div class="section-title">武學（${data.capacity.current} / ${data.capacity.max}）</div>
+    <div class="panel">
+      ${weapons.length === 0 ? `<div class="empty">背包空空如也，去抽卡或副本碰碰運氣吧</div>` :
+        weapons.map(w => `
+          <div class="weapon">
+            <div>
+              <span class="rarity ${w.rarity}">${w.rarity}</span>
+              <span class="weapon-name">${escapeHtml(w.name)}</span>
+              <div class="weapon-meta">${escapeHtml(w.style || '')}${w.set ? '　套裝：' + escapeHtml(w.set) : ''}</div>
+            </div>
+            <span class="row-value">⚔ ${w.power}</span>
+          </div>
+        `).join('')}
+    </div>
+    ${data.pendingDrawQueue.length > 0 ? `
+      <div class="section-title">待收取（背包已滿時暫存於此）</div>
+      <div class="panel">
+        ${data.pendingDrawQueue.map(w => `
+          <div class="weapon">
+            <div>
+              <span class="rarity ${w.rarity}">${w.rarity}</span>
+              <span class="weapon-name">${escapeHtml(w.name)}</span>
+            </div>
+            <span class="row-value">⚔ ${w.power}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+}
+
+async function loadJianghu() {
+  const el = document.getElementById('view-jianghu');
+  el.innerHTML = `
+    <div class="section-title">每日</div>
+    <div class="panel">
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-daily">簽到</button>
+        <button class="btn btn-primary" id="btn-fortune">求今日籤</button>
+      </div>
+      <div class="result-box" id="daily-result"></div>
+    </div>
+    <div class="section-title">風雲榜</div>
+    <div class="panel" id="leaderboard-panel">
+      <div class="loading">排行讀取中……</div>
+    </div>
+  `;
+
+  document.getElementById('btn-daily').onclick = async () => {
+    const box = document.getElementById('daily-result');
+    const { ok, data } = await api('/api/daily/checkin', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = data.msg || (ok ? '簽到完成' : '簽到失敗，可能今天已經簽過了');
+    if (ok && data.ok) refreshPlaque();
+  };
+
+  document.getElementById('btn-fortune').onclick = async () => {
+    const box = document.getElementById('daily-result');
+    const { ok, data } = await api('/api/fortune/draw', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = data.msg || (ok ? '求籤完成' : '今天已經求過籤了');
+    if (ok && data.ok) refreshPlaque();
+  };
+
+  const { ok, data } = await api('/api/leaderboard');
+  const panel = document.getElementById('leaderboard-panel');
+  if (!ok || !data.top || data.top.length === 0) {
+    panel.innerHTML = `<div class="empty">目前還沒有排行資料</div>`;
+    return;
+  }
+  panel.innerHTML = data.top.slice(0, 10).map((u, i) => `
+    <div class="rank-item">
+      <span class="rank-num">${i + 1}</span>
+      <span class="rank-name">${escapeHtml(u.name)}</span>
+      <span class="rank-power">${u.power?.toLocaleString?.() ?? u.power}</span>
+    </div>
+  `).join('');
+}
+
+async function loadShop() {
+  const el = document.getElementById('view-shop');
+  el.innerHTML = `<div class="loading">商店整理中……</div>`;
+  const { ok, data } = await api('/api/shop');
+  if (!ok) { el.innerHTML = `<div class="empty">商店讀取失敗</div>`; return; }
+
+  if (data.purchasedToday) {
+    el.innerHTML = `
+      <div class="section-title">今日商店</div>
+      <div class="panel"><div class="empty">今天已經買過了，明天再來看看</div></div>
+    `;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="section-title">今日商店</div>
+    <div class="panel" id="shop-list">
+      ${data.items.map(it => `
+        <div class="weapon">
+          <div>
+            ${it.rarity ? `<span class="rarity ${it.rarity}">${it.rarity}</span>` : ''}
+            <span class="weapon-name">${escapeHtml(it.name)}</span>
+            <div class="weapon-meta">${it.power ? '⚔ ' + it.power : ''}${it.alreadyOwned ? '　已持有中' : ''}</div>
+          </div>
+          <button class="btn" data-idx="${it.index}" ${it.alreadyOwned ? 'disabled' : ''}>💰 ${it.price}</button>
+        </div>
+      `).join('')}
+    </div>
+    <div class="result-box" id="shop-result"></div>
+  `;
+
+  document.querySelectorAll('#shop-list button').forEach(btn => {
+    btn.onclick = async () => {
+      const idx = Number(btn.dataset.idx);
+      const box = document.getElementById('shop-result');
+      const { ok, data } = await api('/api/shop/buy', { method: 'POST', body: { itemIndex: idx } });
+      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+      box.textContent = data.ok ? '購買成功' : shopErrorText(data.error);
+      if (ok && data.ok) { refreshPlaque(); loadShop(); loadBackpack(); }
+    };
+  });
+}
+
+function shopErrorText(code) {
+  return {
+    ALREADY_PURCHASED_TODAY: '今天已經買過了',
+    NOT_ENOUGH_SILVER: '銀兩不足',
+    ALREADY_HAVE_ACTIVE_ITEM: '這個效果還在生效中',
+  }[code] || '購買失敗，請稍後再試';
+}
+
+function renderGacha() {
+  const el = document.getElementById('view-gacha');
+  el.innerHTML = `
+    <div class="section-title">抽卡</div>
+    <div class="panel">
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-pull1">單抽</button>
+        <button class="btn btn-primary" id="btn-pull10">十連抽</button>
+      </div>
+    </div>
+    <div id="gacha-result"></div>
+  `;
+
+  document.getElementById('btn-pull1').onclick = async () => {
+    const { ok, data } = await api('/api/gacha/single', { method: 'POST' });
+    renderGachaResult(ok && data.ok ? [data.result] : null, data.error);
+    if (ok && data.ok) { refreshPlaque(); loadBackpack(); }
+  };
+
+  document.getElementById('btn-pull10').onclick = async () => {
+    const { ok, data } = await api('/api/gacha/multi', { method: 'POST' });
+    renderGachaResult(ok && data.ok ? data.results : null, data.error);
+    if (ok && data.ok) { refreshPlaque(); loadBackpack(); }
+  };
+}
+
+function renderGachaResult(weapons, errorCode) {
+  const el = document.getElementById('gacha-result');
+  if (!weapons) {
+    el.innerHTML = `<div class="result-box show error">${errorCode === 'NOT_ENOUGH_SILVER' ? '銀兩不足' : '抽卡失敗'}</div>`;
+    return;
+  }
+  const sorted = [...weapons].sort((a, b) => (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0));
+  el.innerHTML = `
+    <div class="panel">
+      ${sorted.map(w => `
+        <div class="weapon">
+          <div>
+            <span class="rarity ${w.rarity}">${w.rarity}</span>
+            <span class="weapon-name">${escapeHtml(w.name)}</span>
+          </div>
+          <span class="row-value">⚔ ${w.power}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function loadSect() {
+  const el = document.getElementById('view-sect');
+  el.innerHTML = `<div class="loading">江湖門派查訪中……</div>`;
+
+  const [meRes, overviewRes] = await Promise.all([api('/api/sect/me'), api('/api/sect')]);
+
+  if (meRes.ok && meRes.data.joined) {
+    const my = meRes.data;
+    el.innerHTML = `
+      <div class="section-title">我的門派</div>
+      <div class="panel">
+        <div class="row"><span class="row-label">門派</span><span class="row-value">${escapeHtml(my.name)}</span></div>
+        <div class="row"><span class="row-label">地位</span><span class="row-value">${escapeHtml(my.rank)}</span></div>
+        <div class="row"><span class="row-label">貢獻</span><span class="row-value">${my.exp}</span></div>
+        <div class="row"><span class="row-label">倉庫加成</span><span class="row-value">+${my.vaultBonusPercent}%</span></div>
+      </div>
+      <div class="section-title">捐獻倉庫</div>
+      <div class="panel">
+        <div class="btn-row">
+          <button class="btn" data-amt="100">捐 100</button>
+          <button class="btn" data-amt="500">捐 500</button>
+          <button class="btn" data-amt="1000">捐 1000</button>
+        </div>
+        <div class="result-box" id="donate-result"></div>
+      </div>
+    `;
+    el.querySelectorAll('[data-amt]').forEach(btn => {
+      btn.onclick = async () => {
+        const amount = Number(btn.dataset.amt);
+        const box = document.getElementById('donate-result');
+        const { ok, data } = await api('/api/sect/vault/donate-silver', { method: 'POST', body: { amount } });
+        box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+        box.textContent = ok && data.ok ? `捐獻成功，倉庫加成 +${data.vaultBonusPercent}%` : '銀兩不足';
+        if (ok && data.ok) { refreshPlaque(); loadSect(); }
+      };
+    });
+    return;
+  }
+
+  const sects = overviewRes.ok ? overviewRes.data.sects : [];
+  el.innerHTML = `
+    <div class="section-title">門派總覽</div>
+    <div class="panel" id="sect-list">
+      ${sects.map(s => `
+        <div class="sect-row">
+          <div class="sect-info">
+            <div class="sect-name">${escapeHtml(s.name)}</div>
+            <div class="sect-detail">人數 ${s.members}　倉庫加成 +${s.vaultBonusPercent}%</div>
+          </div>
+          <button class="btn" data-key="${s.key}">加入</button>
+        </div>
+      `).join('')}
+    </div>
+    <div class="result-box" id="join-result"></div>
+  `;
+  el.querySelectorAll('[data-key]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('join-result');
+      const { ok, data } = await api('/api/sect/join', { method: 'POST', body: { sectKey: btn.dataset.key } });
+      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+      box.textContent = ok && data.ok ? `已加入 ${data.sectName}` : '加入失敗';
+      if (ok && data.ok) loadSect();
+    };
+  });
+}
+
+// ── 對戰頁（境界突破 / 尋人挑戰 / 副本邀約）──────────
+async function loadCombat() {
+  const el = document.getElementById('view-combat');
+  el.innerHTML = `<div class="loading">整軍備戰中……</div>`;
+
+  const [realmRes, partnersRes, pendingRes] = await Promise.all([
+    api('/api/realm-break'), api('/api/dungeon/partners'), api('/api/dungeon/pending-invite'),
+  ]);
+
+  const r = realmRes.ok ? realmRes.data : null;
+  const realmHtml = !r ? '' : r.maxRealm ? `
+    <div class="section-title">境界突破</div>
+    <div class="panel"><div class="empty">你已達到最高境界：武道巔峰</div></div>
+  ` : `
+    <div class="section-title">境界突破</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">目前境界</span><span class="row-value">${escapeHtml(r.current.name)}（×${r.current.multiplier}）</span></div>
+      <div class="row"><span class="row-label">下一境界</span><span class="row-value">${escapeHtml(r.next.name)}（×${r.next.multiplier}）</span></div>
+      <div class="row"><span class="row-label">修為</span><span class="row-value">${r.cultivation} / ${r.next.cultivationNeed}</span></div>
+      <div class="row"><span class="row-label">成功率</span><span class="row-value">${Math.round(r.next.successRate * 100)}%</span></div>
+      <button class="btn btn-primary btn-block" id="btn-realm-break" style="margin-top:10px" ${(!r.canBreak || r.onCooldown) ? 'disabled' : ''}>
+        ${r.onCooldown ? '今日已嘗試過' : r.canBreak ? '嘗試突破' : `修為不足（尚差 ${r.shortfall}）`}
+      </button>
+      <div class="result-box" id="realm-result"></div>
+    </div>
+  `;
+
+  const pending = pendingRes.ok ? pendingRes.data : null;
+  const pendingHtml = pending?.hasPending ? `
+    <div class="section-title">副本邀約</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">${escapeHtml(pending.fromName)} 邀請你組隊闖副本</span></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-invite-accept">接受</button>
+        <button class="btn" id="btn-invite-decline">拒絕</button>
+      </div>
+      <div class="result-box" id="invite-result"></div>
+    </div>
+  ` : '';
+
+  const partners = partnersRes.ok && partnersRes.data.canJoin !== false ? (partnersRes.data.partners || []) : [];
+  const partnersHtml = `
+    <div class="section-title">組隊副本${!pending?.hasPending ? '' : '（其他人選）'}</div>
+    <div class="panel" id="partners-list">
+      ${partnersRes.ok && partnersRes.data.canJoin === false ? `<div class="empty">今日副本次數已達上限</div>` :
+        partners.length === 0 ? `<div class="empty">目前沒有其他可組隊的俠客</div>` :
+        partners.map(p => `
+          <div class="row" data-partner-row="${p.discordId}">
+            <span class="row-label">${escapeHtml(p.name)}（戰力 ${p.power}）</span>
+            <button class="btn" data-invite="${p.discordId}">${outgoingInviteTarget === p.discordId ? '取消邀請' : '邀請'}</button>
+          </div>
+        `).join('')}
+    </div>
+    <div class="result-box" id="dungeon-result"></div>
+  `;
+
+  const searchHtml = `
+    <div class="section-title">尋人挑戰</div>
+    <div class="panel">
+      <div class="btn-row">
+        <input type="text" id="challenge-name" placeholder="輸入俠客名稱" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+        <button class="btn" id="btn-search-target">查詢</button>
+      </div>
+      <div id="challenge-target"></div>
+    </div>
+  `;
+
+  el.innerHTML = realmHtml + pendingHtml + searchHtml + partnersHtml;
+
+  document.getElementById('btn-realm-break')?.addEventListener('click', async () => {
+    const box = document.getElementById('realm-result');
+    const { ok, data } = await api('/api/realm-break/attempt', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok && data.success ? '' : ' error'}`;
+    box.textContent = ok && data.ok
+      ? (data.success ? `突破成功！境界提升至 ${data.newRealm}` : `突破失敗，修為 -${data.lossAmount}`)
+      : '目前無法突破';
+    if (ok && data.ok) { refreshPlaque(); loadCombat(); }
+  });
+
+  document.getElementById('btn-invite-accept')?.addEventListener('click', async () => {
+    const box = document.getElementById('invite-result');
+    const { ok, data } = await api('/api/dungeon/invite/accept', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = ok && data.ok ? dungeonResultText(data.result) : '接受邀請失敗';
+    if (ok && data.ok) { refreshPlaque(); loadBackpack(); loadCombat(); }
+  });
+  document.getElementById('btn-invite-decline')?.addEventListener('click', async () => {
+    await api('/api/dungeon/invite/decline', { method: 'POST' });
+    loadCombat();
+  });
+
+  document.querySelectorAll('[data-invite]').forEach(btn => {
+    btn.onclick = async () => {
+      const targetId = btn.dataset.invite;
+      const box = document.getElementById('dungeon-result');
+      if (outgoingInviteTarget === targetId) {
+        const { ok, data } = await api('/api/dungeon/invite/cancel', { method: 'POST', body: { targetDiscordId: targetId } });
+        if (ok && data.ok) { outgoingInviteTarget = null; box.className = 'result-box show'; box.textContent = '已取消邀請'; }
+        loadCombat();
+        return;
+      }
+      const { ok, data } = await api('/api/dungeon/invite', { method: 'POST', body: { targetDiscordId: targetId } });
+      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+      box.textContent = ok && data.ok ? `已邀請 ${data.targetName}` : '邀請失敗（對方可能已被邀請或已達上限）';
+      if (ok && data.ok) { outgoingInviteTarget = targetId; loadCombat(); }
+    };
+  });
+
+  document.getElementById('btn-search-target').onclick = async () => {
+    const name = document.getElementById('challenge-name').value.trim();
+    const box = document.getElementById('challenge-target');
+    if (!name) return;
+    box.innerHTML = `<div class="loading">查訪中……</div>`;
+    const { ok, data } = await api(`/api/profile/search?name=${encodeURIComponent(name)}`);
+    if (!ok) { box.innerHTML = `<div class="empty">找不到這位俠客</div>`; return; }
+    box.innerHTML = `
+      <div class="row">
+        <span class="row-label">${escapeHtml(data.name)}（戰力 ${data.power}）</span>
+        <button class="btn btn-primary" id="btn-do-challenge" data-target="${data.discordId}">挑戰</button>
+      </div>
+      <div class="result-box" id="challenge-result"></div>
+    `;
+    document.getElementById('btn-do-challenge').onclick = async () => {
+      const rbox = document.getElementById('challenge-result');
+      const { ok, data: cdata } = await api('/api/challenge', { method: 'POST', body: { targetDiscordId: data.discordId } });
+      rbox.className = `result-box show${ok && cdata.ok && cdata.success ? '' : ' error'}`;
+      if (!ok || !cdata.ok) { rbox.textContent = challengeErrorText(cdata.error); return; }
+      let text = cdata.success ? `挑戰成功！獲得 ${cdata.reward.silver} 銀兩` : `挑戰失敗，安慰獎 ${cdata.reward.silver} 銀兩`;
+      if (cdata.success && cdata.stealableWeapons.length > 0) {
+        text += `\n可交換武學：${cdata.stealableWeapons.map(w => w.name).join('、')}（到武學坊分頁使用交換功能）`;
+      }
+      rbox.textContent = text;
+      refreshPlaque();
+    };
+  };
+}
+
+function dungeonResultText(r) {
+  if (!r.success) return `副本失敗，安慰獎：銀兩 +${r.consolation.silver}、修為 +${r.consolation.cultivation}`;
+  return `副本成功！銀兩 +${r.silver}、修為 +${r.cultivation}${r.weaponA ? '，兩人皆有武學掉落' : ''}`;
+}
+
+function challengeErrorText(code) {
+  return {
+    CANNOT_CHALLENGE_SELF: '不能挑戰自己',
+    DAILY_LIMIT_REACHED: '今日挑戰次數已達上限',
+    TARGET_HIDDEN: '對方目前遁形中，無法被挑戰',
+    USER_NOT_FOUND: '找不到玩家資料',
+  }[code] || '挑戰失敗';
+}
+
+// ── 武學坊頁（強化 / 交換 / 交易）─────────────────────
+async function loadWorkshop() {
+  const el = document.getElementById('view-workshop');
+  el.innerHTML = `<div class="loading">武學坊整理中……</div>`;
+
+  const [availRes, offersRes] = await Promise.all([api('/api/weapon-forge/available'), api('/api/trade/offers')]);
+
+  const avail = availRes.ok ? availRes.data.available : [];
+  const offers = offersRes.ok ? offersRes.data.offers : [];
+
+  el.innerHTML = `
+    <div class="section-title">武學強化</div>
+    <div class="panel" id="forge-panel">
+      ${avail.length === 0 ? `<div class="empty">目前沒有 2 件以上同稀有度的武學可融合</div>` :
+        avail.map(a => `
+          <div class="row">
+            <span class="row-label">${a.rarity} → ${a.nextRarity}（持有 ${a.count} 件，成功率 ${Math.round(a.successRate * 100)}%）</span>
+            <button class="btn" data-forge-rarity="${a.rarity}">選擇</button>
+          </div>
+        `).join('')}
+      ${avail.length > 0 ? `<button class="btn btn-primary btn-block" id="btn-quick-forge" style="margin-top:10px">快速強化（全部自動配對）</button>` : ''}
+      <div class="result-box" id="quick-forge-result"></div>
+    </div>
+    <div id="forge-select"></div>
+
+    <div class="section-title">收到的交換邀請</div>
+    <div class="panel">
+      ${offers.length === 0 ? `<div class="empty">目前沒有交換邀請</div>` :
+        offers.map(o => `
+          <div class="row">
+            <span class="row-label">${escapeHtml(o.fromName)} 想用「${o.offeredWeaponDisplay}」換你的「${o.myWeaponDisplay}」</span>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" data-accept-offer="${o.offerId}">接受</button>
+            <button class="btn" data-reject-offer="${o.offerId}">拒絕</button>
+          </div>
+        `).join('')}
+    </div>
+    <div class="result-box" id="trade-offer-result"></div>
+
+    <div class="section-title">主動發起交換</div>
+    <div class="panel">
+      <div class="btn-row">
+        <input type="text" id="trade-name" placeholder="輸入對方名稱" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+        <button class="btn" id="btn-trade-search">查詢</button>
+      </div>
+      <div id="trade-target"></div>
+    </div>
+  `;
+
+  document.querySelectorAll('[data-forge-rarity]').forEach(btn => {
+    btn.onclick = () => loadForgeSelect(btn.dataset.forgeRarity);
+  });
+
+  document.getElementById('btn-quick-forge')?.addEventListener('click', async () => {
+    const box = document.getElementById('quick-forge-result');
+    const { ok, data } = await api('/api/weapon-forge/quick-forge', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = ok && data.ok
+      ? (data.totalRounds === 0 ? '沒有可配對的武學' : `完成 ${data.totalRounds} 次強化，成功 ${data.successCount} 次、失敗 ${data.failCount} 次`)
+      : '快速強化失敗，請重試';
+    if (ok && data.ok) { loadBackpack(); loadWorkshop(); }
+  });
+
+  document.querySelectorAll('[data-accept-offer]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('trade-offer-result');
+      const { ok, data } = await api('/api/trade/accept', { method: 'POST', body: { offerId: btn.dataset.acceptOffer } });
+      box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+      box.textContent = ok && data.ok ? '交換完成' : '邀請已過期或已失效';
+      if (ok && data.ok) { loadBackpack(); loadWorkshop(); }
+    };
+  });
+  document.querySelectorAll('[data-reject-offer]').forEach(btn => {
+    btn.onclick = async () => {
+      await api('/api/trade/reject', { method: 'POST', body: { offerId: btn.dataset.rejectOffer } });
+      loadWorkshop();
+    };
+  });
+
+  document.getElementById('btn-trade-search').onclick = async () => {
+    const name = document.getElementById('trade-name').value.trim();
+    const box = document.getElementById('trade-target');
+    if (!name) return;
+    box.innerHTML = `<div class="loading">查訪中……</div>`;
+    const { ok, data } = await api(`/api/profile/search?name=${encodeURIComponent(name)}`);
+    if (!ok) { box.innerHTML = `<div class="empty">找不到這位俠客</div>`; return; }
+    const myWeapons = state.backpack?.weapons || [];
+    if (myWeapons.length === 0 || data.weapons.length === 0) {
+      box.innerHTML = `<div class="empty">你或對方沒有武學可交換</div>`;
+      return;
+    }
+    box.innerHTML = `
+      <div class="row"><span class="row-label">對方：${escapeHtml(data.name)}</span></div>
+      <div style="margin:8px 0"><label style="font-size:12px;color:var(--ink-soft)">你要拿出：</label>
+        <select id="trade-my-weapon" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
+          ${myWeapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} ⚔${w.power}）</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin:8px 0"><label style="font-size:12px;color:var(--ink-soft)">你想換：</label>
+        <select id="trade-their-weapon" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
+          ${data.weapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} ⚔${w.power}）</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-propose-trade">送出交換邀請</button>
+      <div class="result-box" id="propose-result"></div>
+    `;
+    document.getElementById('btn-propose-trade').onclick = async () => {
+      const rbox = document.getElementById('propose-result');
+      const myIdx = Number(document.getElementById('trade-my-weapon').value);
+      const theirIdx = Number(document.getElementById('trade-their-weapon').value);
+      const { ok, data: pdata } = await api('/api/trade/propose', {
+        method: 'POST',
+        body: { targetDiscordId: data.discordId, myWeaponIndex: myIdx, theirWeaponIndex: theirIdx },
+      });
+      rbox.className = `result-box show${ok && pdata.ok ? '' : ' error'}`;
+      rbox.textContent = ok && pdata.ok ? '交換邀請已送出，等待對方回應' : '送出失敗';
+    };
+  };
+}
+
+async function loadForgeSelect(rarity) {
+  const el = document.getElementById('forge-select');
+  el.innerHTML = `<div class="loading">整理武學中……</div>`;
+  const { ok, data } = await api(`/api/weapon-forge/weapons/${rarity}`);
+  if (!ok || data.weapons.length < 2) {
+    el.innerHTML = `<div class="panel"><div class="empty">可用武學不足 2 件</div></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div class="panel">
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px">勾選偶數件武學進行融合，失敗會全部消失</div>
+      ${data.weapons.map((w, i) => `
+        <label class="row" style="cursor:pointer">
+          <span class="row-label"><input type="checkbox" class="forge-check" data-source="${w.source}" data-index="${w.index}" style="margin-right:8px">${escapeHtml(w.display)}</span>
+        </label>
+      `).join('')}
+      <button class="btn btn-primary btn-block" id="btn-do-forge" style="margin-top:10px">融合</button>
+      <div class="result-box" id="forge-result"></div>
+    </div>
+  `;
+  document.getElementById('btn-do-forge').onclick = async () => {
+    const checked = [...document.querySelectorAll('.forge-check:checked')].map(c => ({ source: c.dataset.source, index: Number(c.dataset.index) }));
+    const box = document.getElementById('forge-result');
+    if (checked.length < 2 || checked.length % 2 !== 0) {
+      box.className = 'result-box show error';
+      box.textContent = '請選擇偶數件武學';
+      return;
+    }
+    const { ok, data: fdata } = await api('/api/weapon-forge/forge', { method: 'POST', body: { rarity, selections: checked } });
+    box.className = `result-box show${ok && fdata.ok ? '' : ' error'}`;
+    box.textContent = ok && fdata.ok
+      ? `完成 ${fdata.pairs} 次融合，成功 ${fdata.successCount} 次、失敗 ${fdata.failCount} 次`
+      : '融合失敗，請重試';
+    if (ok && fdata.ok) { loadBackpack(); loadWorkshop(); }
+  };
+}
+
+// ── 江湖頁（通緝令 / 事件 / 猥瑣升級）─────────────────
+async function loadWorld() {
+  const el = document.getElementById('view-world');
+  el.innerHTML = `<div class="loading">打探江湖消息……</div>`;
+
+  const [bountyRes, eventRes, sneakyRes] = await Promise.all([api('/api/bounty'), api('/api/world-event'), api('/api/sneaky')]);
+
+  const bounty = bountyRes.ok ? bountyRes.data : { system: [], player: [] };
+  const events = eventRes.ok ? eventRes.data.events : [];
+  const sneaky = sneakyRes.ok ? sneakyRes.data : null;
+
+  el.innerHTML = `
+    <div class="section-title">系統通緝</div>
+    <div class="panel">
+      ${bounty.system.length === 0 ? `<div class="empty">目前沒有系統懸賞</div>` :
+        bounty.system.map(b => `
+          <div class="row">
+            <span class="row-label">${escapeHtml(b.gradeLabel)} ${escapeHtml(b.targetName)}（💰${b.reward}，剩 ${b.remainingMinutes} 分）</span>
+            <button class="btn" data-claim-system="${b.id}">接取</button>
+          </div>
+        `).join('')}
+    </div>
+
+    <div class="section-title">玩家通緝</div>
+    <div class="panel">
+      ${bounty.player.length === 0 ? `<div class="empty">目前沒有玩家通緝</div>` :
+        bounty.player.map(b => `
+          <div class="row">
+            <span class="row-label">${escapeHtml(b.publisherName)} 通緝 ${escapeHtml(b.targetName)}（💰${b.reward}，剩 ${b.remainingMinutes} 分）</span>
+            <button class="btn" data-claim-player="${b.id}">接取</button>
+          </div>
+        `).join('')}
+      <div class="result-box" id="bounty-result"></div>
+    </div>
+
+    <div class="section-title">發布通緝</div>
+    <div class="panel">
+      <div class="btn-row">
+        <input type="text" id="bounty-target" placeholder="目標名稱" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <input type="number" id="bounty-amount" placeholder="懸賞銀兩" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+        <input type="number" id="bounty-days" placeholder="天數" style="width:80px;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-publish-bounty" style="margin-top:8px">發布</button>
+      <div class="result-box" id="publish-result"></div>
+    </div>
+
+    <div class="section-title">江湖事件</div>
+    <div class="panel">
+      ${events.length === 0 ? `<div class="empty">目前沒有進行中的江湖事件</div>` :
+        events.map(e => `<div class="row"><span class="row-label">${escapeHtml(e.name)}</span><span class="row-value">剩 ${e.remainingMinutes} 分</span></div>`).join('')}
+    </div>
+
+    ${sneaky ? `
+      <div class="section-title">猥瑣升級</div>
+      <div class="panel">
+        <div class="row"><span class="row-label">狀態</span><span class="row-value">${sneaky.isTopFive ? '排行前五，停用中' : (sneaky.on ? '已開啟' : '已關閉')}</span></div>
+        <div class="row"><span class="row-label">汙染值</span><span class="row-value">${sneaky.pollution} / ${sneaky.pollutionCap}</span></div>
+        <div class="btn-row" style="margin-top:8px">
+          <button class="btn" id="btn-sneaky-toggle" ${sneaky.isTopFive && !sneaky.on ? 'disabled' : ''}>${sneaky.on ? '關閉' : '開啟'}</button>
+          ${sneaky.atCap ? `<button class="btn" id="btn-sneaky-clear">清除汙染（${sneaky.clearCost}）</button>` : ''}
+          ${sneaky.canFreeGachaToday ? `<button class="btn btn-primary" id="btn-sneaky-gacha">今日免費抽卡</button>` : ''}
+        </div>
+        <div class="result-box" id="sneaky-result"></div>
+      </div>
+    ` : ''}
+  `;
+
+  document.querySelectorAll('[data-claim-system]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('bounty-result');
+      const { ok, data } = await api(`/api/bounty/claim-system/${btn.dataset.claimSystem}`, { method: 'POST' });
+      box.className = `result-box show${ok && data.ok && data.success ? '' : ' error'}`;
+      box.textContent = ok && data.ok ? (data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩` : `挑戰 ${data.bossName} 失敗，修為 -${data.cultivationLost}`) : '通緝已失效';
+      if (ok && data.ok) { refreshPlaque(); loadWorld(); }
+    };
+  });
+  document.querySelectorAll('[data-claim-player]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('bounty-result');
+      const { ok, data } = await api(`/api/bounty/claim-player/${btn.dataset.claimPlayer}`, { method: 'POST' });
+      box.className = `result-box show${ok && data.ok && data.success ? '' : ' error'}`;
+      box.textContent = ok && data.ok ? (data.success ? `完成通緝！獲得 ${data.reward} 銀兩` : `挑戰失敗，對方獲得防守獎勵`) : '通緝已失效';
+      if (ok && data.ok) { refreshPlaque(); loadBackpack(); loadWorld(); }
+    };
+  });
+
+  document.getElementById('btn-publish-bounty').onclick = async () => {
+    const box = document.getElementById('publish-result');
+    const name = document.getElementById('bounty-target').value.trim();
+    const amount = Number(document.getElementById('bounty-amount').value);
+    const days = Number(document.getElementById('bounty-days').value);
+    if (!name || !amount || !days) { box.className = 'result-box show error'; box.textContent = '請填寫完整資料'; return; }
+
+    const search = await api(`/api/profile/search?name=${encodeURIComponent(name)}`);
+    if (!search.ok) { box.className = 'result-box show error'; box.textContent = '找不到這位俠客'; return; }
+
+    const { ok, data } = await api('/api/bounty/publish', {
+      method: 'POST',
+      body: { targetDiscordId: search.data.discordId, amount, durationDays: days },
+    });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = ok && data.ok ? `已對 ${data.targetName} 發布通緝` : '發布失敗（銀兩不足或對方遁形中）';
+    if (ok && data.ok) { refreshPlaque(); loadWorld(); }
+  };
+
+  document.getElementById('btn-sneaky-toggle')?.addEventListener('click', async () => {
+    const box = document.getElementById('sneaky-result');
+    const { ok, data } = await api('/api/sneaky/toggle', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = ok && data.ok ? (data.on ? '已開啟' : '已關閉') : '排行前五無法開啟';
+    if (ok && data.ok) loadWorld();
+  });
+  document.getElementById('btn-sneaky-clear')?.addEventListener('click', async () => {
+    const box = document.getElementById('sneaky-result');
+    const { ok, data } = await api('/api/sneaky/clear-pollution', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = ok && data.ok ? '汙染已清除' : '銀兩不足';
+    if (ok && data.ok) { refreshPlaque(); loadWorld(); }
+  });
+  document.getElementById('btn-sneaky-gacha')?.addEventListener('click', async () => {
+    const box = document.getElementById('sneaky-result');
+    const { ok, data } = await api('/api/sneaky/free-gacha', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = ok && data.ok ? `抽到了 ${data.weapon.display}` : '今日已使用過';
+    if (ok && data.ok) { loadBackpack(); loadWorld(); }
+  });
+}
+
+// ── 兌換碼頁 ────────────────────────────────────
+async function loadRedeem() {
+  const el = document.getElementById('view-redeem');
+  el.innerHTML = `<div class="loading">查詢兌換碼中……</div>`;
+  const { ok, data } = await api('/api/redeem-codes');
+  if (!ok) { el.innerHTML = `<div class="empty">讀取失敗</div>`; return; }
+
+  el.innerHTML = `
+    <div class="section-title">近期兌換碼</div>
+    <div class="panel">
+      ${data.codes.length === 0 ? `<div class="empty">目前沒有有效的兌換碼</div>` :
+        data.codes.map(c => `
+          <div class="row">
+            <span class="row-label" style="${c.used ? 'text-decoration:line-through;color:var(--ink-soft)' : ''}">${escapeHtml(c.code)}</span>
+            <button class="btn" data-code="${escapeHtml(c.code)}" data-used="${c.used}">${c.used ? '取消標記' : '標記已使用'}</button>
+          </div>
+        `).join('')}
+    </div>
+  `;
+
+  document.querySelectorAll('[data-code]').forEach(btn => {
+    btn.onclick = async () => {
+      const used = btn.dataset.used === 'true';
+      await api(`/api/redeem-codes/${used ? 'unmark-used' : 'mark-used'}`, { method: 'POST', body: { code: btn.dataset.code } });
+      loadRedeem();
+    };
+  });
+}
+
+async function refreshPlaque() {
+  const { ok, data } = await api('/api/profile/me');
+  if (!ok) return;
+  state.profile = data;
+  document.querySelector('.plaque-name').textContent = data.name;
+  document.querySelector('.plaque-realm').textContent = data.realm;
+  const nums = document.querySelectorAll('.plaque-stat-num');
+  nums[0].textContent = data.silver.toLocaleString();
+  nums[1].textContent = data.power.toLocaleString();
+  renderStatus();
+}
+
+boot();
+</script>
+</body>
+</html>
