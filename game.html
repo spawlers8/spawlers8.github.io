@@ -291,9 +291,14 @@ let state = { loggedIn: false, profile: null };
 
 async function api(path, opts = {}) {
   try {
+    const token = localStorage.getItem('wwm_token');
+    const headers = {};
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const res = await fetch(`${API_BASE}${path}`, {
-      credentials: 'include',
-      headers: opts.body ? { 'Content-Type': 'application/json' } : undefined,
+      credentials: 'include', // 舊瀏覽器/一般模式下 cookie 仍可能有效，保留作為備援
+      headers,
       method: opts.method || 'GET',
       body: opts.body ? JSON.stringify(opts.body) : undefined,
     });
@@ -309,13 +314,26 @@ async function api(path, opts = {}) {
 const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
 let outgoingInviteTarget = null; // 追蹤自己目前發出去、還沒被回應的副本邀請對象
 
+// 登入完成後，Discord 會把 token 帶在網址列上（例：game.html?token=xxx），
+// 這裡取出來存進 localStorage，並把網址清乾淨（不然重新整理會一直帶著這串）
+function consumeTokenFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const token = params.get('token');
+  if (!token) return;
+  localStorage.setItem('wwm_token', token);
+  params.delete('token');
+  const cleanUrl = location.pathname + (params.toString() ? `?${params}` : '') + location.hash;
+  history.replaceState({}, '', cleanUrl);
+}
+
 async function boot() {
+  consumeTokenFromUrl();
   const { ok, data } = await api('/api/auth/me');
   if (!ok && data.error === 'NETWORK_ERROR') {
     $app.innerHTML = `<div class="gate"><p style="max-width:280px">連不上江湖伺服器，稍後再試一次，或重新整理頁面。</p></div>`;
     return;
   }
-  if (!data.loggedIn) { renderGate(); return; }
+  if (!data.loggedIn) { localStorage.removeItem('wwm_token'); renderGate(); return; }
   state.loggedIn = true;
   const profileRes = await api('/api/profile/me');
   if (!profileRes.ok) { renderGate(); return; }
@@ -364,6 +382,7 @@ function renderApp() {
           <div class="plaque-stat-num">${p.power.toLocaleString()}</div>
           <div class="plaque-stat-label">戰力</div>
         </div>
+        <button id="btn-logout" style="background:none;border:none;color:#A79C81;font-size:11px;cursor:pointer;font-family:var(--font-body);padding:0">登出</button>
       </div>
     </div>
     <div class="tabs" id="tabs">
@@ -373,6 +392,12 @@ function renderApp() {
       ${TABS.map((t, i) => `<div class="view${i === 0 ? ' active' : ''}" id="view-${t.key}"></div>`).join('')}
     </div>
   `;
+
+  document.getElementById('btn-logout').onclick = async () => {
+    await api('/api/auth/logout', { method: 'POST' });
+    localStorage.removeItem('wwm_token');
+    location.reload();
+  };
 
   document.getElementById('tabs').addEventListener('click', (e) => {
     const btn = e.target.closest('.tab');
