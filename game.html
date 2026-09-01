@@ -591,6 +591,7 @@ async function loadJianghu() {
     <div class="panel">
       <div class="btn-row">
         <button class="btn btn-primary" id="btn-daily">簽到</button>
+        <button class="btn btn-primary" id="btn-encounter">奇遇</button>
         <button class="btn btn-primary" id="btn-fortune">求今日籤</button>
       </div>
       <div class="result-box" id="daily-result"></div>
@@ -606,6 +607,14 @@ async function loadJianghu() {
     const { ok, data } = await api('/api/daily/checkin', { method: 'POST' });
     box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
     box.textContent = data.msg || (ok ? '簽到完成' : '簽到失敗，可能今天已經簽過了');
+    if (ok && data.ok) refreshPlaque();
+  };
+
+  document.getElementById('btn-encounter').onclick = async () => {
+    const box = document.getElementById('daily-result');
+    const { ok, data } = await api('/api/encounter/trigger', { method: 'POST' });
+    box.className = `result-box show${ok && data.ok ? '' : ' error'}`;
+    box.textContent = data.msg || (ok ? '奇遇完成' : '今日奇遇已用過');
     if (ok && data.ok) refreshPlaque();
   };
 
