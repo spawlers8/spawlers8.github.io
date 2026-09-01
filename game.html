@@ -1247,10 +1247,23 @@ async function loadRedeem() {
       ${data.codes.length === 0 ? `<div class="empty">目前沒有有效的兌換碼</div>` :
         data.codes.map(c => `
           <div class="row">
-            <span class="row-label" style="${c.used ? 'text-decoration:line-through;color:var(--ink-soft)' : ''}">${escapeHtml(c.code)}</span>
+            <div>
+              <span class="row-label" style="${c.used ? 'text-decoration:line-through;color:var(--ink-soft)' : ''}">${escapeHtml(c.code)}</span>
+              ${c.submittedName ? `<div class="weapon-meta">由 ${escapeHtml(c.submittedName)} 回報</div>` : ''}
+            </div>
             <button class="btn" data-code="${escapeHtml(c.code)}" data-used="${c.used}">${c.used ? '取消標記' : '標記已使用'}</button>
           </div>
         `).join('')}
+    </div>
+
+    <div class="section-title">回報新的兌換碼</div>
+    <div class="panel">
+      <div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px">回報後所有人都看得到，重複的碼系統會自動擋掉</div>
+      <div class="btn-row">
+        <input type="text" id="new-code-input" placeholder="輸入兌換碼" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+        <button class="btn btn-primary" id="btn-submit-code">回報</button>
+      </div>
+      <div class="result-box" id="submit-code-result"></div>
     </div>
   `;
 
@@ -1261,6 +1274,20 @@ async function loadRedeem() {
       loadRedeem();
     };
   });
+
+  document.getElementById('btn-submit-code').onclick = async () => {
+    const input = document.getElementById('new-code-input');
+    const code = input.value.trim();
+    const box = document.getElementById('submit-code-result');
+    if (!code) return;
+
+    const { ok, data: rdata } = await api('/api/redeem-codes/submit', { method: 'POST', body: { code } });
+    box.className = `result-box show${ok && rdata.ok ? '' : ' error'}`;
+    box.textContent = ok && rdata.ok
+      ? `已回報「${rdata.code}」，感謝分享！`
+      : (rdata.error === 'CODE_ALREADY_EXISTS' ? '這組碼已經有人回報過了' : '回報失敗，請重試');
+    if (ok && rdata.ok) { input.value = ''; loadRedeem(); }
+  };
 }
 
 async function refreshPlaque() {
