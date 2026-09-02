@@ -334,7 +334,6 @@ async function api(path, opts = {}) {
 }
 
 const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
-let outgoingInviteTarget = null; // 追蹤自己目前發出去、還沒被回應的副本邀請對象
 
 // 登入完成後，Discord 會把 token 帶在網址列上（例：game.html?token=xxx），
 // 這裡取出來存進 localStorage，並把網址清乾淨（不然重新整理會一直帶著這串）
@@ -912,9 +911,9 @@ async function loadCombat() {
   ]);
   const allPlayers = allPlayersRes.ok ? allPlayersRes.data.players : [];
 
-  // 用後端真實資料同步 outgoingInviteTarget，不管重新整理或切分頁都能正確反映
-  const outgoing = outgoingRes.ok ? outgoingRes.data : { hasOutgoing: false };
-  outgoingInviteTarget = outgoing.hasOutgoing ? outgoing.targetDiscordId : null;
+  // 用後端真實資料，改成清單，因為待處理邀請可以有多個（只要不超過剩餘次數）
+  const outgoing = outgoingRes.ok ? outgoingRes.data : { outstanding: [], remaining: 0, canSendMore: false };
+  const outstandingIds = new Set(outgoing.outstanding.map(o => o.targetDiscordId));
 
   const r = realmRes.ok ? realmRes.data : null;
   const realmHtml = !r ? '' : r.maxRealm ? `
@@ -947,12 +946,16 @@ async function loadCombat() {
     </div>
   ` : '';
 
-  // 我目前發出去、還沒被回應的邀請（獨立區塊，隨時看得到、隨時能取消）
-  const outgoingHtml = outgoing.hasOutgoing ? `
-    <div class="section-title">我的邀請</div>
+  // 我目前發出去、還沒被回應的邀請（可以有多個，各自獨立顯示、各自能取消）
+  const outgoingHtml = outgoing.outstanding.length > 0 ? `
+    <div class="section-title">我的邀請（${outgoing.outstanding.length} / ${outgoing.remaining}）</div>
     <div class="panel">
-      <div class="row"><span class="row-label">你邀請了 ${escapeHtml(outgoing.targetName)} 組隊闖副本，等待對方回應</span></div>
-      <button class="btn btn-block" id="btn-cancel-outgoing" style="margin-top:8px">取消邀請</button>
+      ${outgoing.outstanding.map(o => `
+        <div class="row" data-outgoing-row="${o.targetDiscordId}">
+          <span class="row-label">你邀請了 ${escapeHtml(o.targetName)}，等待對方回應</span>
+          <button class="btn" data-cancel-outgoing="${o.targetDiscordId}">取消邀請</button>
+        </div>
+      `).join('')}
       <div class="result-box" id="outgoing-result"></div>
     </div>
   ` : '';
@@ -967,9 +970,10 @@ async function loadCombat() {
         partners.map(p => `
           <div class="row" data-partner-row="${p.discordId}">
             <span class="row-label">${escapeHtml(p.name)}（戰力 ${p.power}）</span>
-            <button class="btn" data-invite="${p.discordId}" ${outgoingInviteTarget && outgoingInviteTarget !== p.discordId ? 'disabled' : ''}>${outgoingInviteTarget === p.discordId ? '取消邀請' : '邀請'}</button>
+            <button class="btn" data-invite="${p.discordId}" ${!outgoing.canSendMore && !outstandingIds.has(p.discordId) ? 'disabled' : ''}>邀請</button>
           </div>
         `).join('')}
+      ${!outgoing.canSendMore ? `<div class="weapon-meta" style="margin-top:8px">待處理邀請已達剩餘次數上限（${outgoing.outstanding.length} / ${outgoing.remaining}），等對方回應或取消後才能再邀</div>` : ''}
     </div>
   `;
 
@@ -988,16 +992,18 @@ async function loadCombat() {
 
   el.innerHTML = realmHtml + pendingHtml + outgoingHtml + searchHtml + partnersHtml;
 
-  document.getElementById('btn-cancel-outgoing')?.addEventListener('click', async () => {
-    const box = document.getElementById('outgoing-result');
-    const { ok, data } = await api('/api/dungeon/invite/cancel', { method: 'POST', body: { targetDiscordId: outgoing.targetDiscordId } });
-    if (ok && data.ok) {
-      outgoingInviteTarget = null;
-      showResultThenConfirm(box, '已取消邀請', false, () => loadCombat());
-    } else {
-      box.className = 'result-box show error';
-      box.textContent = '取消失敗，請重試';
-    }
+  document.querySelectorAll('[data-cancel-outgoing]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('outgoing-result');
+      const targetId = btn.dataset.cancelOutgoing;
+      const { ok, data } = await api('/api/dungeon/invite/cancel', { method: 'POST', body: { targetDiscordId: targetId } });
+      if (ok && data.ok) {
+        showResultThenConfirm(box, '已取消邀請', false, () => loadCombat());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '取消失敗，請重試';
+      }
+    };
   });
 
   document.getElementById('btn-realm-break')?.addEventListener('click', async () => {
@@ -1034,19 +1040,17 @@ async function loadCombat() {
     btn.onclick = async () => {
       const targetId = btn.dataset.invite;
       const box = document.getElementById('dungeon-result');
-      if (outgoingInviteTarget === targetId) {
-        const { ok, data } = await api('/api/dungeon/invite/cancel', { method: 'POST', body: { targetDiscordId: targetId } });
-        if (ok && data.ok) outgoingInviteTarget = null;
-        loadCombat();
-        return;
-      }
       const { ok, data } = await api('/api/dungeon/invite', { method: 'POST', body: { targetDiscordId: targetId } });
       if (ok && data.ok) {
-        outgoingInviteTarget = targetId;
         showResultThenConfirm(box, `已邀請 ${data.targetName}`, false, () => loadCombat());
       } else {
         box.className = 'result-box show error';
-        box.textContent = '邀請失敗（對方可能已被邀請或已達上限）';
+        box.textContent = {
+          TARGET_ALREADY_INVITED: '對方已經有其他人邀請中',
+          TARGET_DAILY_LIMIT_REACHED: '對方今日副本次數已滿',
+          TOO_MANY_OUTSTANDING: `你的待處理邀請已達剩餘次數上限（${data.outstanding} / ${data.remaining}）`,
+          DAILY_LIMIT_REACHED: '你今日副本次數已滿',
+        }[data.error] || '邀請失敗，請重試';
       }
     };
   });
