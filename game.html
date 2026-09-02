@@ -1104,10 +1104,11 @@ async function loadWorkshop() {
   const el = document.getElementById('view-workshop');
   el.innerHTML = `<div class="loading">武學坊整理中……</div>`;
 
-  const [availRes, offersRes] = await Promise.all([api('/api/weapon-forge/available'), api('/api/trade/offers')]);
+  const [availRes, offersRes, outgoingRes] = await Promise.all([api('/api/weapon-forge/available'), api('/api/trade/offers'), api('/api/trade/my-outgoing')]);
 
   const avail = availRes.ok ? availRes.data.available : [];
   const offers = offersRes.ok ? offersRes.data.offers : [];
+  const outgoingOffers = outgoingRes.ok ? outgoingRes.data.offers : [];
 
   const playersRes = await api('/api/trade/players');
   const tradeablePlayers = playersRes.ok ? playersRes.data.players : [];
@@ -1142,6 +1143,18 @@ async function loadWorkshop() {
         `).join('')}
     </div>
     <div class="result-box" id="trade-offer-result"></div>
+
+    <div class="section-title">我發起的交換</div>
+    <div class="panel">
+      ${outgoingOffers.length === 0 ? `<div class="empty">目前沒有發起中的交換</div>` :
+        outgoingOffers.map(o => `
+          <div class="row">
+            <span class="row-label">你想用「${o.myWeaponDisplay}」換 ${escapeHtml(o.toName)} 的「${o.theirWeaponDisplay}」，等待對方回應</span>
+            <button class="btn" data-cancel-trade="${o.offerId}">取消邀請</button>
+          </div>
+        `).join('')}
+      <div class="result-box" id="outgoing-trade-result"></div>
+    </div>
 
     <div class="section-title">主動發起交換</div>
     <div class="panel">
@@ -1202,6 +1215,19 @@ async function loadWorkshop() {
     };
   });
 
+  document.querySelectorAll('[data-cancel-trade]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('outgoing-trade-result');
+      const { ok, data } = await api('/api/trade/cancel', { method: 'POST', body: { offerId: btn.dataset.cancelTrade } });
+      if (ok && data.ok) {
+        showResultThenConfirm(box, '已取消交換邀請', false, () => loadWorkshop());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = '取消失敗，邀請可能已被對方處理';
+      }
+    };
+  });
+
   document.getElementById('trade-target-select')?.addEventListener('change', async function () {
     const targetDiscordId = this.value;
     const box = document.getElementById('trade-target');
@@ -1238,8 +1264,12 @@ async function loadWorkshop() {
         method: 'POST',
         body: { targetDiscordId, myWeaponIndex: myIdx, theirWeaponIndex: theirIdx },
       });
-      rbox.className = `result-box show${ok && pdata.ok ? '' : ' error'}`;
-      rbox.textContent = ok && pdata.ok ? '交換邀請已送出，等待對方回應' : '送出失敗';
+      if (ok && pdata.ok) {
+        showResultThenConfirm(rbox, '交換邀請已送出，等待對方回應', false, () => loadWorkshop());
+      } else {
+        rbox.className = 'result-box show error';
+        rbox.textContent = '送出失敗';
+      }
     };
   });
 }
