@@ -1432,6 +1432,26 @@ async function loadWorld() {
         events.map(e => `<div class="row"><span class="row-label">${escapeHtml(e.name)}</span><span class="row-value">剩 ${e.remainingMinutes} 分</span></div>`).join('')}
     </div>
 
+    ${state.profile?.isAdmin ? `
+      <div class="section-title">江湖事件管理（管理員）</div>
+      <div class="panel">
+        <input type="text" id="event-name" placeholder="事件名稱" style="width:100%;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel);margin-bottom:8px">
+        <div class="btn-row" style="margin-bottom:8px">
+          <input type="number" id="event-ssr" placeholder="SSR加成%" value="5" style="flex:1;border:1.5px solid var(--ink);padding:8px;font-family:var(--font-body);background:var(--panel)">
+          <input type="number" id="event-ur" placeholder="UR加成%" value="2" style="flex:1;border:1.5px solid var(--ink);padding:8px;font-family:var(--font-body);background:var(--panel)">
+        </div>
+        <div class="btn-row" style="margin-bottom:8px">
+          <input type="number" id="event-dungeon" placeholder="副本加成%" value="15" style="flex:1;border:1.5px solid var(--ink);padding:8px;font-family:var(--font-body);background:var(--panel)">
+          <input type="number" id="event-duration" placeholder="持續分鐘" value="30" style="flex:1;border:1.5px solid var(--ink);padding:8px;font-family:var(--font-body);background:var(--panel)">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-create-event">建立事件</button>
+          <button class="btn" id="btn-end-events">結束全部事件</button>
+        </div>
+        <div class="result-box" id="event-admin-result"></div>
+      </div>
+    ` : ''}
+
     ${sneaky ? `
       <div class="section-title">猥瑣升級</div>
       <div class="panel">
@@ -1537,6 +1557,39 @@ async function loadWorld() {
       box.textContent = '發布失敗（銀兩不足或對方遁形中）';
     }
   };
+
+  document.getElementById('btn-create-event')?.addEventListener('click', async () => {
+    const box = document.getElementById('event-admin-result');
+    const name = document.getElementById('event-name').value.trim();
+    if (!name) { box.className = 'result-box show error'; box.textContent = '請輸入事件名稱'; return; }
+    const { ok, data } = await api('/api/world-event', {
+      method: 'POST',
+      body: {
+        name,
+        ssrBonus: Number(document.getElementById('event-ssr').value) || 0,
+        urBonus: Number(document.getElementById('event-ur').value) || 0,
+        dungeonBonus: Number(document.getElementById('event-dungeon').value) || 0,
+        durationMinutes: Number(document.getElementById('event-duration').value) || 30,
+      },
+    });
+    if (ok && data.ok) {
+      showResultThenConfirm(box, `已建立事件「${data.name}」`, false, () => loadWorld());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = data.error === 'ADMIN_ONLY' ? '權限不足' : '建立失敗';
+    }
+  });
+
+  document.getElementById('btn-end-events')?.addEventListener('click', async () => {
+    const box = document.getElementById('event-admin-result');
+    const { ok, data } = await api('/api/world-event/end-all', { method: 'POST' });
+    if (ok && data.ok) {
+      showResultThenConfirm(box, '已結束所有事件', false, () => loadWorld());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '操作失敗';
+    }
+  });
 
   document.getElementById('btn-sneaky-toggle')?.addEventListener('click', async () => {
     const box = document.getElementById('sneaky-result');
