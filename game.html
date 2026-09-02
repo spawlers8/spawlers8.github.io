@@ -1069,18 +1069,52 @@ async function loadCombat() {
         <button class="btn btn-primary" id="btn-do-challenge">挑戰</button>
       </div>
       <div class="result-box" id="challenge-result"></div>
+      <div id="challenge-exchange"></div>
     `;
     document.getElementById('btn-do-challenge').onclick = async () => {
       const rbox = document.getElementById('challenge-result');
+      const exBox = document.getElementById('challenge-exchange');
+      exBox.innerHTML = '';
       const { ok, data: cdata } = await api('/api/challenge', { method: 'POST', body: { targetDiscordId } });
       rbox.className = `result-box show${ok && cdata.ok && cdata.success ? '' : ' error'}`;
       if (!ok || !cdata.ok) { rbox.textContent = challengeErrorText(cdata.error); return; }
-      let text = cdata.success ? `挑戰成功！獲得 ${cdata.reward.silver} 銀兩` : `挑戰失敗，安慰獎 ${cdata.reward.silver} 銀兩`;
-      if (cdata.success && cdata.stealableWeapons.length > 0) {
-        text += `\n可交換武學：${cdata.stealableWeapons.map(w => w.name).join('、')}（到武學坊分頁使用交換功能）`;
-      }
-      rbox.textContent = text;
+      rbox.textContent = cdata.success ? `挑戰成功！獲得 ${cdata.reward.silver} 銀兩` : `挑戰失敗，安慰獎 ${cdata.reward.silver} 銀兩`;
       refreshPlaque();
+
+      if (cdata.success && cdata.stealableWeapons.length > 0) {
+        const myWeapons = state.backpack?.weapons || [];
+        exBox.innerHTML = `
+          <div class="section-title" style="margin-top:16px">交換武學（可選）</div>
+          <div class="panel">
+            <label style="font-size:12px;color:var(--ink-soft)">拿你的：</label>
+            <select id="exchange-my-weapon" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
+              ${myWeapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} / ${escapeHtml(w.style)} ⚔${w.power}）</option>`).join('')}
+            </select>
+            <label style="font-size:12px;color:var(--ink-soft)">換對方的：</label>
+            <select id="exchange-their-weapon" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
+              ${cdata.stealableWeapons.map(w => `<option value="${w.index}">${escapeHtml(w.name)}（${w.rarity} ⚔${w.power}）</option>`).join('')}
+            </select>
+            <button class="btn btn-primary btn-block" id="btn-do-exchange">送出交換</button>
+            <div class="result-box" id="exchange-result"></div>
+          </div>
+        `;
+        document.getElementById('btn-do-exchange').onclick = async () => {
+          const ebox = document.getElementById('exchange-result');
+          const myIdx = Number(document.getElementById('exchange-my-weapon').value);
+          const theirIdx = Number(document.getElementById('exchange-their-weapon').value);
+          const { ok: eok, data: edata } = await api('/api/exchange', {
+            method: 'POST',
+            body: { myWeaponIndex: myIdx, targetDiscordId, targetWeaponIndex: theirIdx },
+          });
+          if (eok && edata.ok) {
+            loadBackpack();
+            showResultThenConfirm(ebox, `交換完成！獲得「${edata.gained.display}」，失去「${edata.lost.display}」`, false, () => loadCombat());
+          } else {
+            ebox.className = 'result-box show error';
+            ebox.textContent = '交換失敗，武學可能已被拿走或為 UR 無法交換';
+          }
+        };
+      }
     };
   });
 }
