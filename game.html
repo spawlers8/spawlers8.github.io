@@ -1145,7 +1145,7 @@ async function loadWorkshop() {
         <label style="font-size:12px;color:var(--ink-soft)">選擇對象：</label>
         <select id="trade-target-select" style="width:100%;padding:10px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
           <option value="">請選擇玩家</option>
-          ${tradeablePlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}</option>`).join('')}
+          ${tradeablePlayers.map(p => `<option value="${p.discordId}">${escapeHtml(p.name)}（戰力 ${p.power}）</option>`).join('')}
         </select>
       `}
       <div id="trade-target"></div>
@@ -1215,12 +1215,12 @@ async function loadWorkshop() {
       <div class="row"><span class="row-label">對方：${escapeHtml(data.name)}</span></div>
       <div style="margin:8px 0"><label style="font-size:12px;color:var(--ink-soft)">你要拿出：</label>
         <select id="trade-my-weapon" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
-          ${myWeapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} ⚔${w.power}）</option>`).join('')}
+          ${myWeapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} / ${escapeHtml(w.style)} ⚔${w.power}）</option>`).join('')}
         </select>
       </div>
       <div style="margin:8px 0"><label style="font-size:12px;color:var(--ink-soft)">你想換：</label>
         <select id="trade-their-weapon" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body)">
-          ${data.weapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} ⚔${w.power}）</option>`).join('')}
+          ${data.weapons.map((w, i) => `<option value="${i}">${escapeHtml(w.name)}（${w.rarity} / ${escapeHtml(w.style)} ⚔${w.power}）</option>`).join('')}
         </select>
       </div>
       <button class="btn btn-primary btn-block" id="btn-propose-trade">送出交換邀請</button>
