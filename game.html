@@ -551,6 +551,7 @@ async function loadBackpack() {
     ${data.pendingDrawQueue.length > 0 ? `
       <div class="section-title">待收取（背包已滿時暫存於此）</div>
       <div class="panel">
+        ${data.capacity.current >= data.capacity.max ? `<div class="weapon-meta" style="margin-bottom:8px">背包已滿，請先丟棄一件武學騰出空位，才能放入待收取的武學</div>` : ''}
         ${data.pendingDrawQueue.map(w => `
           <div class="weapon">
             <div>
@@ -559,6 +560,7 @@ async function loadBackpack() {
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <span class="row-value">⚔ ${w.power}</span>
+              <button class="btn btn-primary" data-collect="${w.index}" style="padding:6px 10px;font-size:12px" ${data.capacity.current >= data.capacity.max ? 'disabled' : ''}>放入背包</button>
               <button class="btn" data-discard="queue" data-idx="${w.index}" style="padding:6px 10px;font-size:12px">丟棄</button>
             </div>
           </div>
@@ -567,6 +569,24 @@ async function loadBackpack() {
     ` : ''}
     <div class="result-box" id="backpack-result"></div>
   `;
+
+  el.querySelectorAll('[data-collect]').forEach(btn => {
+    btn.onclick = async () => {
+      const box = document.getElementById('backpack-result');
+      const { ok, data: rdata } = await api('/api/backpack/collect', {
+        method: 'POST',
+        body: { index: Number(btn.dataset.collect) },
+      });
+      if (ok && rdata.ok) {
+        box.className = 'result-box show';
+        box.textContent = `已將「${rdata.collected.display}」放入背包`;
+        loadBackpack();
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = rdata.error === 'BAG_FULL' ? '背包已滿，請先丟棄一件武學' : '放入失敗，請重新整理再試';
+      }
+    };
+  });
 
   el.querySelectorAll('[data-discard]').forEach(btn => {
     btn.onclick = async () => {
