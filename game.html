@@ -236,6 +236,7 @@
   .rarity.SR { color: var(--jade); }
   .rarity.SSR { color: var(--brass); }
   .rarity.UR { color: var(--seal); }
+  .rarity.MYTHIC { color: #9b59b6; font-weight: 700; }
 
   .empty {
     text-align: center;
@@ -333,7 +334,7 @@ async function api(path, opts = {}) {
   }
 }
 
-const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4 };
+const RARITY_ORDER = { N: 0, R: 1, SR: 2, SSR: 3, UR: 4, MYTHIC: 5 };
 
 // 登入完成後，Discord 會把 token 帶在網址列上（例：game.html?token=xxx），
 // 這裡取出來存進 localStorage，並把網址清乾淨（不然重新整理會一直帶著這串）
@@ -383,6 +384,7 @@ const TABS = [
   { key: 'combat', label: '對戰' },
   { key: 'workshop', label: '武學坊' },
   { key: 'world', label: '江湖' },
+  { key: 'codex', label: '圖鑑' },
   { key: 'redeem', label: '兌換碼' },
 ];
 
@@ -462,6 +464,7 @@ const TAB_LOADERS = {
   combat: loadCombat,
   workshop: loadWorkshop,
   world: loadWorld,
+  codex: loadCodex,
   redeem: loadRedeem,
 };
 
@@ -503,6 +506,7 @@ function renderStatus() {
       <div class="row"><span class="row-label">境界</span><span class="row-value">${escapeHtml(p.realm)}</span></div>
       <div class="row"><span class="row-label">修為</span><span class="row-value">${p.cultivation.toLocaleString()}</span></div>
       <div class="row"><span class="row-label">戰力</span><span class="row-value">${p.power.toLocaleString()}</span></div>
+      <div class="row"><span class="row-label">第幾世</span><span class="row-value">第 ${(p.ascensionCount ?? 0) + 1} 世${p.ascensionCount > 0 ? `（累積倍率 ×${p.ascensionMultiplier.toFixed(1)}）` : ''}</span></div>
       <div class="row"><span class="row-label">銀兩</span><span class="row-value brass">${p.silver.toLocaleString()}</span></div>
       ${p.sect ? `<div class="row"><span class="row-label">門派</span><span class="row-value">${escapeHtml(p.sect.name)}・${escapeHtml(p.sect.rank)}</span></div>` : `<div class="row"><span class="row-label">門派</span><span class="row-value">尚未加入</span></div>`}
     </div>
@@ -938,7 +942,22 @@ async function loadCombat() {
   const r = realmRes.ok ? realmRes.data : null;
   const realmHtml = !r ? '' : r.maxRealm ? `
     <div class="section-title">境界突破</div>
-    <div class="panel"><div class="empty">你已達到最高境界：武道巔峰</div></div>
+    <div class="panel">
+      <div class="row"><span class="row-label">目前境界</span><span class="row-value">你已達到最高境界：武道巔峰</span></div>
+      <div class="row"><span class="row-label">目前是第幾世</span><span class="row-value">第 ${r.ascensionCount + 1} 世</span></div>
+      <div class="row"><span class="row-label">轉世次數</span><span class="row-value">${r.ascensionCount} 次</span></div>
+      <div class="row"><span class="row-label">目前累積倍率</span><span class="row-value">×${r.ascensionMultiplier.toFixed(1)}</span></div>
+    </div>
+    <div class="section-title">轉世</div>
+    <div class="panel">
+      <div class="weapon-meta" style="margin-bottom:10px">
+        轉世會把境界、修為歸零重新開始，但這一世累積的戰力倍率會永久保留、疊乘到下一世上。
+        武學、銀兩都會保留，免費、隨時可以自己決定要不要轉世。
+      </div>
+      <div class="row"><span class="row-label">轉世後倍率</span><span class="row-value">×${r.ascensionMultiplier.toFixed(1)} → ×${r.nextAscensionMultiplier.toFixed(1)}</span></div>
+      <button class="btn btn-primary btn-block" id="btn-ascend" style="margin-top:10px">🌌 轉世</button>
+      <div class="result-box" id="ascend-result"></div>
+    </div>
   ` : `
     <div class="section-title">境界突破</div>
     <div class="panel">
@@ -1036,6 +1055,19 @@ async function loadCombat() {
     } else {
       box.className = 'result-box show error';
       box.textContent = '目前無法突破';
+    }
+  });
+
+  document.getElementById('btn-ascend')?.addEventListener('click', async () => {
+    if (!confirm('確定要轉世嗎？境界跟修為會歸零重新開始，這一世的倍率會永久疊乘保留，這個動作無法復原。')) return;
+    const box = document.getElementById('ascend-result');
+    const { ok, data } = await api('/api/realm-break/ascend', { method: 'POST' });
+    if (ok && data.ok) {
+      refreshPlaque();
+      showResultThenConfirm(box, data.announcementText, false, () => loadCombat());
+    } else {
+      box.className = 'result-box show error';
+      box.textContent = '轉世失敗，請重新整理再試';
     }
   });
 
@@ -1310,6 +1342,14 @@ async function loadWorkshop() {
       <button class="btn btn-primary btn-block" id="btn-propose-trade">送出交換邀請</button>
       <div class="result-box" id="propose-result"></div>
     `;
+
+    // 如果是從圖鑑「查詢持有者 → 去交換」跳轉過來的，自動選好對方那件缺少的武學
+    if (pendingTradeFromCodex && pendingTradeFromCodex.targetDiscordId === targetDiscordId) {
+      const theirSelect = document.getElementById('trade-their-weapon');
+      if (theirSelect) theirSelect.value = String(pendingTradeFromCodex.targetWeaponIndex);
+      pendingTradeFromCodex = null;
+    }
+
     document.getElementById('btn-propose-trade').onclick = async () => {
       const rbox = document.getElementById('propose-result');
       const myIdx = Number(document.getElementById('trade-my-weapon').value);
@@ -1326,6 +1366,18 @@ async function loadWorkshop() {
       }
     };
   });
+
+  // 從圖鑑「查詢持有者 → 去交換」跳轉過來時，自動選好交換對象，省得使用者再找一次
+  if (pendingTradeFromCodex) {
+    const sel = document.getElementById('trade-target-select');
+    const hasOption = sel && [...sel.options].some(o => o.value === pendingTradeFromCodex.targetDiscordId);
+    if (hasOption) {
+      sel.value = pendingTradeFromCodex.targetDiscordId;
+      sel.dispatchEvent(new Event('change'));
+    } else {
+      pendingTradeFromCodex = null; // 理論上不會發生（清單來源一致），保險起見清掉避免殘留
+    }
+  }
 }
 
 async function loadForgeSelect(rarity) {
@@ -1659,6 +1711,78 @@ function showSneakyConfirm() {
   if (!confirmBtn) return;
   confirmBtn.style.display = 'block';
   confirmBtn.onclick = () => loadWorld();
+}
+
+// ── 圖鑑頁 ────────────────────────────────────
+let pendingTradeFromCodex = null; // { targetDiscordId, targetWeaponIndex }，用來從圖鑑跳到武學坊時自動帶入
+
+async function loadCodex() {
+  const el = document.getElementById('view-codex');
+  el.innerHTML = `<div class="loading">翻閱武學圖鑑中……</div>`;
+  const { ok, data } = await api('/api/codex');
+  if (!ok) { el.innerHTML = `<div class="empty">圖鑑讀取失敗，請重新整理再試</div>`; return; }
+
+  const byStyle = {};
+  data.entries.forEach(e => {
+    byStyle[e.styleLabel] = byStyle[e.styleLabel] || [];
+    byStyle[e.styleLabel].push(e);
+  });
+
+  el.innerHTML = `
+    <div class="section-title">收集進度</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">已收集</span><span class="row-value">${data.unlockedCount} / ${data.total}（${data.percent}%）</span></div>
+    </div>
+    ${Object.entries(byStyle).map(([style, list]) => `
+      <div class="section-title">${escapeHtml(style)}</div>
+      <div class="panel">
+        ${list.map(e => `
+          <div class="row" data-codex-row="${escapeHtml(e.name)}">
+            <div>
+              <span class="rarity ${e.rarity}">${e.rarityLabel}</span>
+              <span class="weapon-name" style="${e.unlocked ? '' : 'opacity:0.35'}">${e.unlocked ? escapeHtml(e.name) : '？？？'}</span>
+              ${e.unlocked ? `<div class="weapon-meta">⚔ ${e.power}</div>` : ''}
+            </div>
+            ${e.unlocked ? '<span class="row-value">✅ 已收集</span>' : `<button class="btn" data-find-holder="${escapeHtml(e.name)}" style="padding:6px 10px;font-size:12px">查詢持有者</button>`}
+          </div>
+          <div id="holder-${escapeHtml(e.name).replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_')}"></div>
+        `).join('')}
+      </div>
+    `).join('')}
+  `;
+
+  el.querySelectorAll('[data-find-holder]').forEach(btn => {
+    btn.onclick = async () => {
+      const weaponName = btn.dataset.findHolder;
+      const safeId = weaponName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
+      const box = document.getElementById(`holder-${safeId}`);
+      box.innerHTML = `<div class="loading" style="padding:8px 0">查詢中……</div>`;
+      const { ok: hok, data: hdata } = await api(`/api/codex/holders?weaponName=${encodeURIComponent(weaponName)}`);
+      if (!hok || hdata.holders.length === 0) {
+        box.innerHTML = `<div class="empty" style="padding:8px 0">目前沒有其他玩家持有這件武學</div>`;
+        return;
+      }
+      box.innerHTML = `
+        <div class="panel" style="margin-top:0;margin-bottom:16px">
+          ${hdata.holders.map(h => `
+            <div class="row">
+              <span class="row-label">${escapeHtml(h.name)} 持有這件</span>
+              <button class="btn btn-primary" data-goto-trade="${h.discordId}" data-goto-idx="${h.weaponIndex}" style="padding:6px 10px;font-size:12px">去交換</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      box.querySelectorAll('[data-goto-trade]').forEach(gbtn => {
+        gbtn.onclick = () => {
+          pendingTradeFromCodex = {
+            targetDiscordId: gbtn.dataset.gotoTrade,
+            targetWeaponIndex: Number(gbtn.dataset.gotoIdx),
+          };
+          switchTab('workshop');
+        };
+      });
+    };
+  });
 }
 
 // ── 兌換碼頁 ────────────────────────────────────
