@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《轉世之獸》攻略選單</title>
+<style>
+  :root {
+    --paper: #EDE6D3;
+    --paper-deep: #DED2B0;
+    --panel: #F4EEDD;
+    --ink: #2A2420;
+    --ink-soft: #6B6152;
+    --seal: #A32F26;
+    --seal-dark: #7E231C;
+    --brass: #8C6A2F;
+    --jade: #435F45;
+    --border: #B9A97D;
+    --border-soft: #CBBE95;
+    --font-display: "Noto Serif TC", serif;
+    --font-body: "Noto Sans TC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+  .header {
+    background: var(--ink);
+    color: var(--panel);
+    padding: 36px 20px 30px;
+    text-align: center;
+  }
+  .header h1 {
+    font-family: var(--font-display);
+    margin: 0 0 8px;
+    font-size: 26px;
+    letter-spacing: 1px;
+  }
+  .header p {
+    margin: 0;
+    color: var(--border-soft);
+    font-size: 14px;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 20px 60px;
+  }
+  .card {
+    display: block;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-left: 5px solid var(--seal);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-left-color 0.15s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(42, 36, 32, 0.12);
+    border-left-color: var(--jade);
+  }
+  .card .icon {
+    font-size: 26px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .card h2 {
+    font-family: var(--font-display);
+    font-size: 19px;
+    margin: 0 0 8px;
+    color: var(--ink);
+  }
+  .card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .card .arrow {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--seal);
+    font-weight: 700;
+  }
+  .footer-note {
+    margin-top: 36px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .footer-note a { color: var(--brass); }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>《轉世之獸》攻略選單</h1>
+    <p>整理自社群攻略資訊，選擇你需要的內容</p>
+  </div>
+
+  <div class="container">
+
+    <a class="card" href="./game-guide-platinum.html">
+      <span class="icon">🏆</span>
+      <h2>白金獎盃攻略</h2>
+      <p>哪些獎盃一週目就要解掉、哪些一定要等二週目、技能點數怎麼分配才不會白忙一場，這裡整理了完整的獎盃分類建議。</p>
+      <span class="arrow">前往查看 →</span>
+    </a>
+
+    <a class="card" href="./game-guide-collection.html">
+      <span class="icon">🗺️</span>
+      <h2>全收集要素整理</h2>
+      <p>刀劍、遠程武器、裝備、道具配方、琥珀技能、料理——全部取得地點濃縮成速查表，收集控必看。</p>
+      <span class="arrow">前往查看 →</span>
+    </a>
+
+    <div class="footer-note">
+      
+    </div>
+
+  </div>
+</body>
+</html>
