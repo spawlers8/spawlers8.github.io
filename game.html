@@ -771,6 +771,7 @@ function renderGachaResult(weapons, errData) {
         </div>
       `).join('')}
     </div>
+    ${errData?.easterEgg ? `<div class="result-box show" style="border-left-color:#d4af37">🎐 神秘的迴響……<br>竟然抽到了傳說中的「${escapeHtml(errData.easterEgg)}」！（這東西沒有任何用處，純粹是造化弄人）</div>` : ''}
   `;
 }
 
@@ -1728,6 +1729,8 @@ async function loadCodex() {
     byStyle[e.styleLabel].push(e);
   });
 
+  const easterEggs = data.easterEggs || [];
+
   el.innerHTML = `
     <div class="section-title">收集進度</div>
     <div class="panel">
@@ -1749,6 +1752,18 @@ async function loadCodex() {
         `).join('')}
       </div>
     `).join('')}
+    ${easterEggs.length > 0 ? `
+      <div class="section-title">🎐 彩蛋收藏</div>
+      <div class="panel">
+        <div class="weapon-meta" style="margin-bottom:10px">跟武學無關的神秘收藏，沒有戰力、純粹是造化弄人。機率極低，隨緣就好。</div>
+        ${easterEggs.map(e => `
+          <div class="row">
+            <span class="weapon-name" style="${e.unlocked ? '' : 'opacity:0.35'}">${e.unlocked ? escapeHtml(e.name) : '？？？'}</span>
+            <span class="row-value">${e.unlocked ? '✨ 已收集' : '尚未發現'}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
   `;
 
   el.querySelectorAll('[data-find-holder]').forEach(btn => {
