@@ -1392,6 +1392,7 @@ async function loadForgeSelect(rarity) {
   el.innerHTML = `
     <div class="panel">
       <div style="font-size:13px;color:var(--ink-soft);margin-bottom:10px">勾選偶數件武學進行融合，失敗會全部消失</div>
+      <button class="btn" id="btn-forge-select-all" style="margin-bottom:10px">全選</button>
       ${data.weapons.map((w, i) => `
         <label class="row" style="cursor:pointer">
           <span class="row-label"><input type="checkbox" class="forge-check" data-source="${w.source}" data-index="${w.index}" style="margin-right:8px">${escapeHtml(w.display)}</span>
@@ -1402,6 +1403,21 @@ async function loadForgeSelect(rarity) {
       <button class="btn btn-block" id="btn-forge-confirm" style="margin-top:10px;display:none">確定</button>
     </div>
   `;
+
+  document.getElementById('btn-forge-select-all').onclick = function () {
+    const boxes = [...document.querySelectorAll('.forge-check')];
+    const allChecked = boxes.every(c => c.checked);
+    if (allChecked) {
+      boxes.forEach(c => c.checked = false);
+      this.textContent = '全選';
+    } else {
+      // 總數是奇數的話，融合一定要偶數件才能配對，全選時自動排除最後一件，不用使用者自己再手動取消一個
+      const limit = boxes.length % 2 === 0 ? boxes.length : boxes.length - 1;
+      boxes.forEach((c, i) => c.checked = i < limit);
+      this.textContent = '取消全選';
+    }
+  };
+
   document.getElementById('btn-do-forge').onclick = async () => {
     const checked = [...document.querySelectorAll('.forge-check:checked')].map(c => ({ source: c.dataset.source, index: Number(c.dataset.index) }));
     const box = document.getElementById('forge-result');
