@@ -374,7 +374,7 @@ function renderGate() {
   `;
 }
 
-const TABS = [
+const BASE_TABS = [
   { key: 'status', label: '狀態' },
   { key: 'backpack', label: '背包' },
   { key: 'jianghu', label: '江湖事務' },
@@ -388,8 +388,16 @@ const TABS = [
   { key: 'redeem', label: '兌換碼' },
 ];
 
+// 抽卡統計只有管理員看得到，一般玩家連分頁籤都不會出現，只有網頁有這個功能（Discord 完全沒有）
+function getVisibleTabs() {
+  return state.profile?.isAdmin
+    ? [...BASE_TABS, { key: 'gacha-stats', label: '抽卡統計' }]
+    : BASE_TABS;
+}
+
 function renderApp() {
   const p = state.profile;
+  const tabs = getVisibleTabs();
   $app.innerHTML = `
     <div class="plaque">
       <div>
@@ -410,11 +418,11 @@ function renderApp() {
     </div>
     <div class="tabs-wrap" id="tabs-wrap">
       <div class="tabs" id="tabs">
-        ${TABS.map((t, i) => `<button class="tab${i === 0 ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}
+        ${tabs.map((t, i) => `<button class="tab${i === 0 ? ' active' : ''}" data-tab="${t.key}">${t.label}</button>`).join('')}
       </div>
     </div>
     <div id="views">
-      ${TABS.map((t, i) => `<div class="view${i === 0 ? ' active' : ''}" id="view-${t.key}"></div>`).join('')}
+      ${tabs.map((t, i) => `<div class="view${i === 0 ? ' active' : ''}" id="view-${t.key}"></div>`).join('')}
     </div>
   `;
 
@@ -451,6 +459,7 @@ function renderApp() {
   loadWorkshop();
   loadWorld();
   loadRedeem();
+  if (state.profile?.isAdmin) loadGachaStats();
 }
 
 // 每個分頁對應的資料載入函式，切換分頁時會重新呼叫，確保看到的永遠是最新資料
@@ -466,6 +475,7 @@ const TAB_LOADERS = {
   world: loadWorld,
   codex: loadCodex,
   redeem: loadRedeem,
+  'gacha-stats': loadGachaStats,
 };
 
 function switchTab(key) {
@@ -1814,6 +1824,74 @@ async function loadCodex() {
       });
     };
   });
+}
+
+// ── 抽卡統計頁（只有管理員看得到，只有網頁有，Discord 沒有）─────
+async function loadGachaStats(days = 30) {
+  const el = document.getElementById('view-gacha-stats');
+  if (!el) return; // 保險：非管理員不會有這個節點，理論上不會走到這裡
+  el.innerHTML = `<div class="loading">統計抽卡紀錄中……</div>`;
+
+  const { ok, data } = await api(`/api/gacha-stats?days=${days}`);
+  if (!ok) {
+    el.innerHTML = `<div class="empty">讀取失敗（可能沒有管理員權限，或還沒有任何抽卡紀錄）</div>`;
+    return;
+  }
+
+  const styleLabels = {
+    sword: '劍', blade: '刀', fist: '拳', dual_blade: '雙刀', fan: '扇',
+    umbrella: '傘', spear: '槍', mind: '內功', hidden: '暗器', leg: '腿法', movement: '身法',
+  };
+
+  el.innerHTML = `
+    <div class="section-title">抽卡統計（管理員專用）</div>
+    <div class="panel">
+      <div class="row"><span class="row-label">統計範圍</span><span class="row-value">
+        <select id="stats-days-select" style="padding:4px;font-family:var(--font-body)">
+          <option value="7" ${days===7?'selected':''}>最近 7 天</option>
+          <option value="30" ${days===30?'selected':''}>最近 30 天</option>
+          <option value="90" ${days===90?'selected':''}>最近 90 天</option>
+          <option value="0" ${days===0?'selected':''}>全部歷史</option>
+        </select>
+      </span></div>
+      <div class="row"><span class="row-label">總抽卡次數</span><span class="row-value">${data.total.toLocaleString()}</span></div>
+    </div>
+
+    <div class="section-title">按流派分布</div>
+    <div class="panel">
+      ${data.byStyle.length === 0 ? `<div class="empty">目前沒有紀錄</div>` :
+        data.byStyle.map(s => `
+          <div class="row">
+            <span class="row-label">${escapeHtml(styleLabels[s.style] || s.style || '（彩蛋）')}</span>
+            <span class="row-value">${s.count} 次（${s.percent}%）</span>
+          </div>
+        `).join('')}
+    </div>
+
+    <div class="section-title">按稀有度分布</div>
+    <div class="panel">
+      ${data.byRarity.map(r => `
+        <div class="row">
+          <span class="row-label"><span class="rarity ${r.rarity}">${r.rarity}</span></span>
+          <span class="row-value">${r.count} 次（${r.percent}%）</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section-title">每件武學實際抽中次數（前 30 名）</div>
+    <div class="panel">
+      ${data.byName.slice(0, 30).map(n => `
+        <div class="row">
+          <span class="row-label"><span class="rarity ${n.rarity}">${n.rarity}</span> ${escapeHtml(n.name)}（${escapeHtml(styleLabels[n.style] || n.style || '')}）</span>
+          <span class="row-value">${n.count} 次</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  document.getElementById('stats-days-select').onchange = function () {
+    loadGachaStats(Number(this.value));
+  };
 }
 
 // ── 兌換碼頁 ────────────────────────────────────
