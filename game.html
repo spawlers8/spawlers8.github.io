@@ -633,6 +633,10 @@ async function loadJianghu() {
     <div class="panel" id="leaderboard-panel">
       <div class="loading">排行讀取中……</div>
     </div>
+    <div class="section-title">江湖境界榜</div>
+    <div class="panel" id="realm-leaderboard-panel">
+      <div class="loading">境界讀取中……</div>
+    </div>
   `;
 
   document.getElementById('btn-daily').onclick = async () => {
@@ -670,6 +674,20 @@ async function loadJianghu() {
       <span class="rank-num">${i + 1}</span>
       <span class="rank-name">${escapeHtml(u.name)}</span>
       <span class="rank-power">${u.power?.toLocaleString?.() ?? u.power}</span>
+    </div>
+  `).join('');
+
+  const realmRes = await api('/api/profile/realm-leaderboard');
+  const realmPanel = document.getElementById('realm-leaderboard-panel');
+  if (!realmRes.ok || !realmRes.data.players || realmRes.data.players.length === 0) {
+    realmPanel.innerHTML = `<div class="empty">目前還沒有境界資料</div>`;
+    return;
+  }
+  realmPanel.innerHTML = realmRes.data.players.slice(0, 20).map((u, i) => `
+    <div class="rank-item">
+      <span class="rank-num">${i + 1}</span>
+      <span class="rank-name">${escapeHtml(u.name)}</span>
+      <span class="rank-power">${escapeHtml(u.realm)}${u.ascensionCount > 0 ? `（第 ${u.ascensionCount + 1} 世）` : ''}</span>
     </div>
   `).join('');
 }
