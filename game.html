@@ -391,7 +391,7 @@ const BASE_TABS = [
 // 抽卡統計只有管理員看得到，一般玩家連分頁籤都不會出現，只有網頁有這個功能（Discord 完全沒有）
 function getVisibleTabs() {
   return state.profile?.isAdmin
-    ? [...BASE_TABS, { key: 'gacha-stats', label: '抽卡統計' }]
+    ? [...BASE_TABS, { key: 'gacha-stats', label: '抽卡統計' }, { key: 'admin', label: '玩家管理' }]
     : BASE_TABS;
 }
 
@@ -459,7 +459,7 @@ function renderApp() {
   loadWorkshop();
   loadWorld();
   loadRedeem();
-  if (state.profile?.isAdmin) loadGachaStats();
+  if (state.profile?.isAdmin) { loadGachaStats(); loadAdmin(); }
 }
 
 // 每個分頁對應的資料載入函式，切換分頁時會重新呼叫，確保看到的永遠是最新資料
@@ -476,6 +476,7 @@ const TAB_LOADERS = {
   codex: loadCodex,
   redeem: loadRedeem,
   'gacha-stats': loadGachaStats,
+  admin: loadAdmin,
 };
 
 function switchTab(key) {
@@ -1842,6 +1843,65 @@ async function loadCodex() {
       });
     };
   });
+}
+
+// ── 玩家管理頁（只有管理員看得到，只有網頁有，Discord 沒有）─────
+async function loadAdmin() {
+  const el = document.getElementById('view-admin');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="section-title">移除玩家（管理員）</div>
+    <div class="panel">
+      <div class="weapon-meta" style="margin-bottom:10px;color:var(--seal)">⚠️ 這是不可逆的操作，刪除後這個玩家的所有資料（背包、境界、銀兩、門派身分）都會永久消失，請務必先確認清楚再刪。</div>
+      <div class="btn-row">
+        <input type="text" id="admin-search-input" placeholder="輸入玩家暱稱或 Discord ID" style="flex:1;border:1.5px solid var(--ink);padding:10px;font-family:var(--font-body);font-size:14px;background:var(--panel)">
+        <button class="btn btn-primary" id="btn-admin-search">搜尋</button>
+      </div>
+      <div id="admin-search-results" style="margin-top:12px"></div>
+    </div>
+  `;
+
+  document.getElementById('btn-admin-search').onclick = async () => {
+    const keyword = document.getElementById('admin-search-input').value.trim();
+    const box = document.getElementById('admin-search-results');
+    if (!keyword) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="loading">搜尋中……</div>`;
+
+    const { ok, data } = await api(`/api/admin/search-player?keyword=${encodeURIComponent(keyword)}`);
+    if (!ok) { box.innerHTML = `<div class="empty">搜尋失敗</div>`; return; }
+    if (data.players.length === 0) { box.innerHTML = `<div class="empty">找不到符合的玩家</div>`; return; }
+
+    box.innerHTML = data.players.map(p => `
+      <div class="panel" style="margin-bottom:10px">
+        <div class="row"><span class="row-label">暱稱</span><span class="row-value">${escapeHtml(p.name)}</span></div>
+        <div class="row"><span class="row-label">境界</span><span class="row-value">${escapeHtml(p.realm)}</span></div>
+        <div class="row"><span class="row-label">銀兩</span><span class="row-value">${p.silver?.toLocaleString?.() ?? p.silver}</span></div>
+        <div class="row"><span class="row-label">武學數量</span><span class="row-value">${p.weaponsCount}</span></div>
+        <div class="row"><span class="row-label">門派</span><span class="row-value">${p.sectName ? escapeHtml(p.sectName) + (p.isLeader ? '（掌門）' : '') : '未加入'}</span></div>
+        <button class="btn" data-delete-player="${p.discordId}" data-delete-name="${escapeHtml(p.name)}" style="margin-top:8px;border-color:var(--seal);color:var(--seal)">🗑️ 刪除這個玩家</button>
+      </div>
+    `).join('');
+
+    box.querySelectorAll('[data-delete-player]').forEach(btn => {
+      btn.onclick = async () => {
+        const name = btn.dataset.deleteName;
+        if (!confirm(`確定要刪除「${name}」嗎？\n\n這個人的背包、境界、銀兩、門派身分都會永久消失，無法復原。`)) return;
+        if (!confirm(`再次確認：真的要永久刪除「${name}」嗎？`)) return;
+
+        btn.disabled = true;
+        btn.textContent = '刪除中……';
+        const { ok, data } = await api('/api/admin/delete-player', { method: 'POST', body: { targetDiscordId: btn.dataset.deletePlayer } });
+        if (ok && data.ok) {
+          alert(`已刪除「${data.deletedName}」`);
+          loadAdmin();
+        } else {
+          alert('刪除失敗：' + (data.error || '未知錯誤'));
+          btn.disabled = false;
+          btn.textContent = '🗑️ 刪除這個玩家';
+        }
+      };
+    });
+  };
 }
 
 // ── 抽卡統計頁（只有管理員看得到，只有網頁有，Discord 沒有）─────
