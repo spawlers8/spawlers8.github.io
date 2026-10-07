@@ -1577,7 +1577,7 @@ async function loadWorld() {
       ${bounty.system.length === 0 ? `<div class="empty">目前沒有系統懸賞</div>` :
         bounty.system.map(b => `
           <div class="row">
-            <span class="row-label">${escapeHtml(b.gradeLabel)} ${escapeHtml(b.targetName)}（💰${b.reward}，剩 ${b.remainingMinutes} 分）</span>
+            <span class="row-label">${escapeHtml(b.gradeLabel)} ${escapeHtml(b.targetName)}（💰${b.reward}，修為+${b.cultivation ?? 0}，剩 ${b.remainingMinutes} 分）</span>
             ${b.canClaim === false
               ? `<button class="btn" disabled style="opacity:.5;cursor:not-allowed">已挑戰失敗</button>`
               : `<button class="btn" data-claim-system="${b.id}">接取</button>`}
@@ -1678,7 +1678,7 @@ async function loadWorld() {
         refreshPlaque();
         showResultThenConfirm(
           box,
-          data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩` : `挑戰 ${data.bossName} 失敗，全身而退（無法再挑戰此懸賞）`,
+          data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩、修為 +${data.cultivation ?? 0}` : `挑戰 ${data.bossName} 失敗，全身而退（無法再挑戰此懸賞）`,
           !data.success,
           () => loadWorld()
         );
