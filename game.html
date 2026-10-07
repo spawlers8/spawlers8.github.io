@@ -1578,7 +1578,9 @@ async function loadWorld() {
         bounty.system.map(b => `
           <div class="row">
             <span class="row-label">${escapeHtml(b.gradeLabel)} ${escapeHtml(b.targetName)}（💰${b.reward}，剩 ${b.remainingMinutes} 分）</span>
-            <button class="btn" data-claim-system="${b.id}">接取</button>
+            ${b.canClaim === false
+              ? `<button class="btn" disabled style="opacity:.5;cursor:not-allowed">已挑戰失敗</button>`
+              : `<button class="btn" data-claim-system="${b.id}">接取</button>`}
           </div>
         `).join('')}
       <div class="result-box" id="system-bounty-result"></div>
@@ -1676,13 +1678,13 @@ async function loadWorld() {
         refreshPlaque();
         showResultThenConfirm(
           box,
-          data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩` : `挑戰 ${data.bossName} 失敗，修為 -${data.cultivationLost}`,
+          data.success ? `擊敗 ${data.bossName}！獲得 ${data.reward} 銀兩` : `挑戰 ${data.bossName} 失敗，全身而退（無法再挑戰此懸賞）`,
           !data.success,
           () => loadWorld()
         );
       } else {
         box.className = 'result-box show error';
-        box.textContent = '通緝已失效';
+        box.textContent = (data && data.error === 'ALREADY_FAILED') ? '你已挑戰失敗過此懸賞' : '通緝已失效';
       }
     };
   });
