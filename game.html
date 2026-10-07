@@ -1567,6 +1567,8 @@ async function loadWorld() {
   const [bountyRes, eventRes, sneakyRes, allPlayersRes] = await Promise.all([api('/api/bounty'), api('/api/world-event'), api('/api/sneaky'), api('/api/profile/list-all')]);
 
   const bounty = bountyRes.ok ? bountyRes.data : { system: [], player: [] };
+  const adminOptsRes = state.profile?.isAdmin ? await api('/api/bounty/admin-options') : null;
+  const adminOpts = adminOptsRes && adminOptsRes.ok ? adminOptsRes.data : null;
   const events = eventRes.ok ? eventRes.data.events : [];
   const sneaky = sneakyRes.ok ? sneakyRes.data : null;
   const allPlayers = allPlayersRes.ok ? allPlayersRes.data.players : [];
@@ -1651,6 +1653,23 @@ async function loadWorld() {
           <button class="btn" id="btn-end-events">結束全部事件</button>
         </div>
         <div class="result-box" id="event-admin-result"></div>
+      </div>
+    ` : ''}
+
+    ${adminOpts ? `
+      <div class="section-title">系統通緝管理（管理員）</div>
+      <div class="panel">
+        <select id="abounty-tier" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px">
+          ${adminOpts.tiers.map(t => `<option value="${t.key}">${escapeHtml(t.label)}（💰${t.reward}，修為+${t.cultivation}）</option>`).join('')}
+        </select>
+        <select id="abounty-sect" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px;display:none">
+          <option value="">隨機門派</option>
+          ${adminOpts.sects.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}發布</option>`).join('')}
+        </select>
+        <select id="abounty-boss" style="width:100%;padding:8px;border:1.5px solid var(--ink);background:var(--panel);font-family:var(--font-body);margin-bottom:8px"></select>
+        <input type="number" id="abounty-minutes" placeholder="持續分鐘（預設 180，最長 1440）" value="180" style="width:100%;border:1.5px solid var(--ink);padding:8px;font-family:var(--font-body);background:var(--panel);margin-bottom:8px">
+        <button class="btn btn-primary" id="btn-abounty-create">發布系統通緝</button>
+        <div class="result-box" id="abounty-result"></div>
       </div>
     ` : ''}
 
@@ -1759,6 +1778,37 @@ async function loadWorld() {
       box.textContent = '發布失敗（銀兩不足或對方遁形中）';
     }
   };
+
+  if (adminOpts) {
+    const tierSel = document.getElementById('abounty-tier');
+    const sectSel = document.getElementById('abounty-sect');
+    const bossSel = document.getElementById('abounty-boss');
+    const syncAdminBounty = () => {
+      const t = adminOpts.tiers.find(x => x.key === tierSel.value);
+      sectSel.style.display = tierSel.value === 'sect' ? '' : 'none';
+      bossSel.innerHTML = `<option value="">隨機 BOSS</option>` + (t?.names || []).map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    };
+    tierSel.onchange = syncAdminBounty;
+    syncAdminBounty();
+    document.getElementById('btn-abounty-create').onclick = async () => {
+      const box = document.getElementById('abounty-result');
+      const { ok, data } = await api('/api/bounty/admin-create', {
+        method: 'POST',
+        body: {
+          tier: tierSel.value,
+          sectName: sectSel.value || undefined,
+          bossName: bossSel.value || undefined,
+          durationMinutes: Number(document.getElementById('abounty-minutes').value) || 180,
+        },
+      });
+      if (ok && data.ok) {
+        showResultThenConfirm(box, `已發布：${data.sectName ? data.sectName + '發布・' : ''}${data.bossName}（${data.minutes} 分鐘）`, false, () => loadWorld());
+      } else {
+        box.className = 'result-box show error';
+        box.textContent = data?.error === 'ADMIN_ONLY' ? '權限不足' : '發布失敗';
+      }
+    };
+  }
 
   document.getElementById('btn-create-event')?.addEventListener('click', async () => {
     const box = document.getElementById('event-admin-result');
