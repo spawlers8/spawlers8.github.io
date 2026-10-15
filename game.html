@@ -557,16 +557,18 @@ async function loadBackpack() {
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <span class="row-value">⚔ ${w.power}</span>
+              <button class="btn" data-stash="${w.index}" style="padding:6px 10px;font-size:12px">移到待收取</button>
               <button class="btn" data-discard="bag" data-idx="${w.index}" style="padding:6px 10px;font-size:12px">丟棄</button>
             </div>
           </div>
         `).join('')}
     </div>
+    ${weapons.length > 0 ? `<div class="btn-row" style="margin:-6px 0 12px"><button class="btn" id="btn-stash-all">全部移到待收取</button></div>` : ''}
     ${weapons.length >= 2 ? `<p style="font-size:12px;color:var(--ink-soft);margin:-6px 0 16px">想融合升級武學？到「武學坊」分頁操作。</p>` : ''}
     ${data.pendingDrawQueue.length > 0 ? `
-      <div class="section-title">待收取（背包已滿時暫存於此）</div>
+      <div class="section-title">待收取（可自行把背包武學暫存於此，要用時再放回背包）</div>
       <div class="panel">
-        ${data.capacity.current >= data.capacity.max ? `<div class="weapon-meta" style="margin-bottom:8px">背包已滿，請先丟棄一件武學騰出空位，才能放入待收取的武學</div>` : ''}
+        ${data.capacity.current >= data.capacity.max ? `<div class="weapon-meta" style="margin-bottom:8px">背包已滿，請先丟棄或移走一件武學騰出空位，才能放入待收取的武學</div>` : ''}
         ${data.pendingDrawQueue.map(w => `
           <div class="weapon">
             <div>
@@ -584,6 +586,21 @@ async function loadBackpack() {
     ` : ''}
     <div class="result-box" id="backpack-result"></div>
   `;
+
+  const stashMove = async (indices) => {
+    const box = document.getElementById('backpack-result');
+    const { ok, data: rdata } = await api('/api/backpack/stash', { method: 'POST', body: { indices } });
+    box.className = `result-box show${ok && rdata.ok ? '' : ' error'}`;
+    box.textContent = ok && rdata.ok ? `已將 ${rdata.count} 件武學移到待收取` : '移動失敗，請重新整理再試';
+    if (ok && rdata.ok) loadBackpack();
+  };
+  el.querySelectorAll('[data-stash]').forEach(btn => {
+    btn.onclick = () => stashMove([Number(btn.dataset.stash)]);
+  });
+  document.getElementById('btn-stash-all')?.addEventListener('click', () => {
+    if (!confirm('確定要把背包裡的全部武學移到待收取嗎？（不會丟棄，之後可以再放回背包）')) return;
+    stashMove(state.backpack.weapons.map(w => w.index));
+  });
 
   el.querySelectorAll('[data-collect]').forEach(btn => {
     btn.onclick = async () => {
