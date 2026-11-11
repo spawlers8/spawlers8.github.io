@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《最終幻想 共鳴》白金攻略</title>
+<style>
+  :root {
+    --paper: #EDE6D3;
+    --paper-deep: #DED2B0;
+    --panel: #F4EEDD;
+    --ink: #2A2420;
+    --ink-soft: #6B6152;
+    --seal: #A32F26;
+    --seal-dark: #7E231C;
+    --brass: #8C6A2F;
+    --jade: #435F45;
+    --border: #B9A97D;
+    --border-soft: #CBBE95;
+    --font-display: "Noto Serif TC", serif;
+    --font-body: "Noto Sans TC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.7;
+  }
+  .header {
+    background: var(--ink);
+    color: var(--panel);
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .header h1 {
+    font-family: var(--font-display);
+    margin: 0 0 6px;
+    font-size: 22px;
+  }
+  .header p {
+    margin: 0;
+    color: var(--border-soft);
+    font-size: 13px;
+  }
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--seal);
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+  .notice {
+    background: var(--panel);
+    border-left: 4px solid var(--seal);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 30px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .panel p { margin: 0 0 8px; }
+  .panel p:last-child { margin-bottom: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: top;
+  }
+  th {
+    background: var(--paper-deep);
+    font-family: var(--font-display);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: var(--jade);
+    color: var(--panel);
+  }
+  .tag.legend { background: #6b5fa8; }
+  .tag.new { background: var(--seal); }
+  .kv { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--border-soft); }
+  .kv:last-child { border-bottom:none; }
+  .kv .k { color:var(--ink-soft); white-space:nowrap; }
+  .kv .v { text-align:right; }
+  .tag.shop { background: var(--brass); }
+  .event-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-name { font-weight: 700; }
+  .event-date { color: var(--ink-soft); font-size: 12.5px; margin-top: 2px; }
+  .timeline-img {
+    width: 100%;
+    border: 1px solid var(--border);
+    margin: 8px 0;
+    display: block;
+  }
+  .source-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>《最終幻想 共鳴》白金攻略</h1>
+    <p>PS5・40 個獎盃（白金 1／金 4／銀 7／銅 28）・難度偏低，重點在收集與兩三個刷取獎盃</p>
+  </div>
+  <div class="container">
+    <a class="back-link" href="./game-guide-index.html">← 回攻略選單</a>
+    <div class="notice">整理自 psnine 各獎盃頁的玩家 Tips，並非官方攻略；數字（等級、收集數）為玩家回報，請以自己的存檔為準。完美率最低的是 <strong>白金 3.8%</strong>，但多位玩家評價「白金要求寬鬆」，主要耗時在收集與刷取。</div>
+
+    <div class="section-title">🧭 總覽建議</div>
+    <div class="panel"><ul>
+      <li><strong>難度：</strong>想拿白金，大多數 Tips 建議用<strong>最低（輕鬆）難度</strong>，尤其是「究極神兵」，輕鬆難度下血量約 230 萬，遠低於其他難度。</li>
+      <li><strong>可以不打的內容：</strong>十二武具的第二階段（強化版）與「競技場最高級」都不是白金必要（競技場「上級」才是）。</li>
+      <li><strong>時間：</strong>玩家回報簡單難度約 40 小時、困難難度約 60 小時內可白金。</li>
+      
+    </ul></div>
+
+    <div class="section-title">🗺️ 建議流程</div>
+    <div class="panel"><ol style="margin:8px 0;padding-left:20px">
+      <li>主線 1～8 章通關，順便收石板碎片（見下表）、做各角色支線。</li>
+      <li>第 5 章拿飛空艇後，跑完能逛的地方；順手收洞窟之主、海上商船、飛空艇探寶。</li>
+      <li>第 5 章米西亞西部拿幻兵「梵」→ 刷金幣；去龍之顎刷金幣龜王／金屬巨型仙人掌。</li>
+      <li>通關後處理：競技場、十二武具、艾琳武器、全幻兵（含薩菲羅斯）、究極神兵。</li>
+      <li>最後再刷「共鳴 400 次」（找合適的怪邊看劇集邊刷）。</li>
+    </ol></div>
+
+    <div class="section-title">📖 劇情與收集類</div>
+    <div class="panel"><table>
+      <tr><th>獎盃</th><th>要點</th></tr>
+      <tr><td>追求真理（第5章）</td><td>拿到飛空艇後把能逛的地方都去一遍。若不想掃全圖：主線的隱密都市在地圖<strong>正南方偏西</strong>，到正南方後莉德會讓你微調距離。</td></tr>
+      <tr><td>遺忘的線索<br><span style="color:var(--ink-soft);font-size:12px">忘卻公主第 2 段回憶</span></td><td>靠收集石板碎片觸發：有玩家在收到 62 塊時解鎖（2 星房間的寶箱全開後跳杯）。</td></tr>
+      <tr><td>石板碎片（總數）</td><td>白金要求<strong>89 塊</strong>，仔細舔圖不易漏。各章依序：<strong>12、15、15、18、12、9、3</strong>；每章打完記一下差幾塊方便查漏。也可向海上商船購買。</td></tr>
+      <tr><td>屠獵者<br><span style="color:var(--ink-soft);font-size:12px">打倒所有洞窟之主</span></td><td>總共 <strong>15 個</strong>；靈峰山旁有一個很難找，要繞到另一邊。</td></tr>
+    </table></div>
+
+    <div class="section-title">💰 金幣與稀有怪</div>
+    <div class="panel"><table>
+      <tr><th>獎盃</th><th>要點</th></tr>
+      <tr><td>莉德，全速前進<br><span style="color:var(--ink-soft);font-size:12px">累計 100 萬金幣</span></td><td>第 5 章米西亞西部拿到幻兵<strong>梵</strong>：被動雙倍金幣＋偷錢，單次偷大怪可得 9,500。有玩家全程無特別刷，結尾身上有 300 萬。</td></tr>
+      <tr><td>一攫千金<br><span style="color:var(--ink-soft);font-size:12px">打倒金幣龜王</span></td><td>龍之顎出口處只會遇到金幣龜王、巨型綠仙人掌、巨型金屬仙人掌。注意：龍之顎標示 55 級，內部實際六十多級，強度比其他地方高。金幣龜王約 <strong>5 回合沒打死就會逃跑</strong>，要集中輸出。</td></tr>
+      <tr><td>價值千金<br><span style="color:var(--ink-soft);font-size:12px">打倒金屬巨型仙人掌</span></td><td>刷點：<strong>龍之顎出來後的小島</strong>（金幣龜王也在此刷新）。龍之顎內無法逃跑、怪物等級高。最後的水晶塔迷宮也會出現，但機率很低。</td></tr>
+    </table></div>
+
+    <div class="section-title">⚔️ 武器與十二武具</div>
+    <div class="panel"><p><strong>武器匠師（請艾琳打造所有人的武器）</strong></p><ul>
+      <li>玩家回報最少要 <strong>84 塊</strong>石板碎片，保險起見蒐集到 <strong>89 塊</strong>。</li>
+      <li>海上商船不會出現在地圖邊緣航線；若一直沒遇到，可能是主線進度還不夠。</li></ul></div>
+    <div class="panel"><p><strong>天之武具（取得全部十二武具）</strong></p>
+      <table><tr><th>武具</th><th>取得方式</th></tr>
+      <tr><td>劍</td><td>競技場初級獎勵</td></tr>
+      <tr><td>刀</td><td>最終迷宮寶箱</td></tr>
+      <tr><td>弓</td><td>完成納夏特鎮支線後，到十二武具房間與 NPC 對話</td></tr>
+      <tr><td>鞭子</td><td>84 塊石板碎片獎勵</td></tr>
+      <tr><td>槌子</td><td>飛空艇探寶（需先拿到共鳴石並將雷達升到 1 級）</td></tr>
+      <tr><td>槍</td><td>76 塊石板碎片獎勵</td></tr>
+      <tr><td>書</td><td>海上隨機商船購買</td></tr>
+      <tr><td>法杖</td><td>紫安鎮找 NPC 拿鑰匙，再到地圖上方小屋開鎖</td></tr>
+      <tr><td>重鎧</td><td>競技場中級獎勵</td></tr>
+      <tr><td>輕甲</td><td>飛空艇尋寶</td></tr>
+      <tr><td>披風</td><td>海上商船購買</td></tr>
+      <tr><td>飾品</td><td>第四章地圖岩場洞窟寶箱</td></tr></table>
+      <p style="color:var(--ink-soft);font-size:12.5px;margin-top:8px">雷達升到 2 級前，必須先把 1 級雷達能找的物品全部找齊，否則即使拿到共鳴石，莉德也不會觸發升級對話。</p></div>
+
+    <div class="section-title">🏟️ 競技場</div>
+    <div class="panel"><p><strong>尋道者（通關上級所有戰鬥）</strong></p><ul>
+      <li>最後的<strong>超巨型仙人掌</strong>會在死前放大招，要帶「必中」的瞄準並撐過；牠死亡但我方全滅<strong>不算過關</strong>。</li>
+      <li>不同難度對戰沒有差別，可帶艾美莉亞 MR3 給的「盯準」；傑克可在死前用隱遁自保。</li>
+      <li>通關上級後，3 級覺醒石可在競技場商店購買（無限買），用來補幻兵覺醒材料。</li>
+      <li>輕鬆難度可用雷因＋三名女法師靠魔法輸出；反射流（尼爾科蓄力、反射戒指、袒護全體、法師連續詠唱）也穩。</li>
+      <li>防即死小技巧：水晶塔的梅薩莉娜可偷「免疫即死緞帶」，龍顎大嘴花可偷免疫即死盔甲（龍顎無法逃跑）。</li></ul>
+      <p style="color:var(--ink-soft);font-size:12.5px">「競技場最高級」不是白金必要。</p></div>
+
+    <div class="section-title">🌟 幻兵與幻獸</div>
+    <div class="panel"><table>
+      <tr><th>獎盃</th><th>要點</th></tr>
+      <tr><td>覺醒之光</td><td>全收集後拿到的升級材料，剛好夠把所有幻兵升滿；缺的話去打競技場，每通關一個等級就能無限購買該等級魔石。</td></tr>
+      <tr><td>祈禱凝成結晶<br><span style="color:var(--ink-soft);font-size:12px">取得全部幻兵</span></td><td>最後一隻<strong>薩菲羅斯</strong>是唯一難點，共 3 階段（見下方）。</td></tr>
+      <tr><td>行星的統治者們</td><td>先取得 8 種幻獸，從<strong>第 7 章</strong>開始，回到船上與人對話即可挑戰並收服<strong>巴哈姆特</strong>。</td></tr>
+    </table></div>
+    <div class="panel"><p><strong>薩菲羅斯攻略</strong>（系統建議 45 級，有人 67 級才過，也有人 50 出頭就過）</p><ul>
+      <li><strong>P1：</strong>正宗架勢，物理無效、魔防高 → 先用法術降魔防。</li>
+      <li><strong>P2：</strong>隨機放<strong>「無情天使」</strong>把全員打到 1 血，並附魔屬性、出現弱點（用無屬性攻擊會被反擊）、會驅散增益。對策：讓他不連續行動、中間插我方行動並用群體復活／道具拉起；或帶風／雷／冰吸收。減速水魔法可控行動順序。</li>
+      <li><strong>P3：</strong>HP 降到約 80001／400000 時鎖血，可慢慢補狀態與減益，待他行動轉階段後再爆發；<strong>8 回合倒數後放大招</strong>，必須在 8 回合內解決。</li>
+      <li>穩定解法：主角帶<strong>光之戰士使暗屬性無效</strong>＋「守護」「袒護全體」＋嘲諷，薩菲大多招式會失效，只需補血。</li>
+      <li>輸出解法：全隊 75 級（龍之顎最深處出口附近刷仙人掌練等），櫻（無敵盾＋增益＋全員重生）＋妮可（無情天使後二段技能，全員二動秒殺）。</li>
+      <li>也可用軍師「轉戰自如之策」＋W臂腕＋連續魔法；或兩名物理男角色各 16 刀打完。</li>
+      <li>有人用「2 星蒂娜熔毀＋火吸收」，低難度拿到飛空艇後即可挑戰。</li></ul></div>
+
+    <div class="section-title">🔁 共鳴 400 次（最麻煩的刷取獎盃）</div>
+    <div class="panel"><p>完美率僅 5.5%，有玩家稱是全遊戲最麻煩的獎盃（中後期物理太強，怪不容易破防）。最快約每分鐘 6 次，刷了近 50 分鐘。共通思路：<strong>找破防容易的怪 → 破防連擊 → 放共鳴 → 用共鳴把怪血回滿 → 循環</strong>。</p><ul>
+      <li><strong>魔女＋彩花（最多人用）：</strong>找一級小怪（如初始城門口的普通小怪），隊伍只留魔女菲娜＋彩花（或夏洛特等可共鳴的補師）。吸魔一次（或兩次無限吸魔）即可破防，之後一直用<strong>模仿指令</strong>放共鳴，每分鐘可放 3～4 次。拿到獎盃後直接退出即可。</li>
+      <li><strong>龍之顎入口：</strong>布丁公主與黑色軟泥怪，非弱點攻擊只造成 1 點，用拉斯維爾普攻即可破防，效率高。</li>
+      <li><strong>金幣龜龜：</strong>只帶拉斯維爾，選面板低的武器，兩發清霜破防，再由艾琳大招回滿血。龜龜會反彈傷害，多備回復道具。</li>
+      <li><strong>雪地塔土屬性吸收怪：</strong>帶土屬性大招的英靈，破防連擊後用共鳴補滿怪血。</li>
+      <li><strong>十二武具試煉：</strong>書試煉第二形態打掉雙手後全體普攻（每次約 1 點）即可破防；槍試煉平時無法造成傷害，破防後防禦即可。</li></ul></div>
+
+    <div class="section-title">👾 究極神兵（最後一個獎盃）</div>
+    <div class="panel"><ul>
+      <li>通關主線後，在大地圖<strong>右下角隕石坑</strong>挑戰。<strong>用最低難度</strong>，血量約 230 萬；以無屬性輸出為主可避開約八成機制。</li>
+      <li><strong>配置 A：</strong>主角（群體物理護盾＋緞帶＋梵幻兵）、爆擊裝備的薩菲羅斯（減防要一直維持，核心輸出）、蒂娜（打究極魔法）、彩花（W臂腕＋藥理知識，群體回復）。</li>
+      <li><strong>配置 B：</strong>巴茲、薩菲羅斯、尼可（彩花）、蒂娜（櫻），全員免疫異常緞帶（水晶塔梅薩莉娜可高機率偷到）、W臂腕、三倍極限；尼可先用 4 個陣法上 Buff，待 Boss 破防且尼可能開二動大招時，其他三人秒殺。</li>
+      <li>低難度可在龍之顎練到 80 級後直接灌傷害，沒有機制。</li></ul></div>
+
+    <div class="section-title">🛠️ 通用戰鬥配置</div>
+    <div class="panel"><ul>
+      <li><strong>反射流：</strong>男主、軍師加兩名法師，被多位玩家評為通關最佳思路。</li>
+      <li>後期優先 <strong>W臂腕</strong>（可從弗利奧尼爾 MR9 取得）、<strong>MP 減半</strong>（特倫 MR9）、<strong>三倍極限</strong>（洋蔥騎士 MR9）；軍師的「轉戰自如之策」配合魔法連用。</li>
+      <li>練等：龍之顎用仙人掌刷經驗，搭配雙倍經驗手環／飾品；有人全員 80 級。</li>
+      <li>金錢與經驗效率：幻兵「梵」偷錢，先攻＋水戒指開局快速擊殺。</li></ul></div>
+
+    <div class="section-title">✅ 白金檢查表</div>
+    <div class="panel"><ul style="list-style:none;padding-left:0">
+      <li>☐ 第 1～8 章通關 + 全員加入 + 所有主要角色支線</li>
+      <li>☐ 陸行鳥、飛空艇</li>
+      <li>☐ 石板碎片 89 塊（艾琳武器、鞭子 84、槍 76）</li>
+      <li>☐ 洞窟之主 15 隻</li>
+      <li>☐ 競技場初／中／上級</li>
+      <li>☐ 十二武具全拿、艾琳為所有人打造武器</li>
+      <li>☐ 全幻兵（含薩菲羅斯）、幻兵精通與覺醒、全幻獸（含巴哈姆特）</li>
+      <li>☐ 金幣累計 100 萬、金幣龜王、金屬巨型仙人掌</li>
+      <li>☐ 破防 1000 次、共鳴 400 次、機械鳥強化到最終階段</li>
+      <li>☐ 究極神兵</li>
+    </ul></div>
+
+    <div class="source-footer">資料來源：psnine《最終幻想 共鳴》（PS5）各獎盃頁玩家 Tips（captoon_shanghai、iamluohuan、hayate1989、kamenride_dcd、Illyasely 等）。內容為摘要改寫，請以實際遊戲為準。</div>
+  </div>
+</body>
+</html>
