@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《伊莫》11/12 更新公告整理</title>
+<style>
+  :root {
+    --paper: #EDE6D3;
+    --paper-deep: #DED2B0;
+    --panel: #F4EEDD;
+    --ink: #2A2420;
+    --ink-soft: #6B6152;
+    --seal: #A32F26;
+    --seal-dark: #7E231C;
+    --brass: #8C6A2F;
+    --jade: #435F45;
+    --border: #B9A97D;
+    --border-soft: #CBBE95;
+    --font-display: "Noto Serif TC", serif;
+    --font-body: "Noto Sans TC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.7;
+  }
+  .header {
+    background: var(--ink);
+    color: var(--panel);
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .header h1 {
+    font-family: var(--font-display);
+    margin: 0 0 6px;
+    font-size: 22px;
+  }
+  .header p {
+    margin: 0;
+    color: var(--border-soft);
+    font-size: 13px;
+  }
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--seal);
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+  .notice {
+    background: var(--panel);
+    border-left: 4px solid var(--seal);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 30px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .panel p { margin: 0 0 8px; }
+  .panel p:last-child { margin-bottom: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: top;
+  }
+  th {
+    background: var(--paper-deep);
+    font-family: var(--font-display);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: var(--jade);
+    color: var(--panel);
+  }
+  .tag.legend { background: #6b5fa8; }
+  .tag.new { background: var(--seal); }
+  .kv { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--border-soft); }
+  .kv:last-child { border-bottom:none; }
+  .kv .k { color:var(--ink-soft); white-space:nowrap; }
+  .kv .v { text-align:right; }
+  .tag.shop { background: var(--brass); }
+  .event-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-name { font-weight: 700; }
+  .event-date { color: var(--ink-soft); font-size: 12.5px; margin-top: 2px; }
+  .timeline-img {
+    width: 100%;
+    border: 1px solid var(--border);
+    margin: 8px 0;
+    display: block;
+  }
+  .source-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>《伊莫》11/12 版本更新公告</h1>
+    <p>伊莫親密度・虹彩留影・伊莫衝衝衝・卷齒鯊重置（亞太服時間）</p>
+  </div>
+  <div class="container">
+    <div id="news-nav"></div>
+    <div class="notice">本頁整理自官方 11/12 維護公告，<strong>時間皆為亞太服（Aniimo-Apac，UTC+8）</strong>。完整原文以遊戲內與官方網站公告為準。</div>
+
+    <div class="section-title">🔧 維護資訊</div>
+    <div class="panel">
+      <div class="kv"><span class="k">維護時間（亞太服）</span><span class="v">11/12（四）14:00 ~ 19:00</span></div>
+      <div class="kv"><span class="k">維護補償</span><span class="v">輝石 ×500（限 S2 賽季版本更新前完成註冊的連結者）</span></div>
+      <div class="kv"><span class="k">備註</span><span class="v">維護完成後需重新啟動遊戲客戶端；實際時長可能變動</span></div>
+    </div>
+
+    <div class="section-title">📜 全新劇情任務</div>
+    <div class="panel"><p><strong>新月海灣・新增兩條旅途任務</strong></p>
+      <div class="event-item"><div class="event-name">夢中的珊瑚海</div><div class="event-date">「珊殼魚」總愛做夢，夢中有一片遙遠寧靜的珊瑚海。跨越潮汐風暴才能抵達的理想鄉，魚該如何見到你？</div></div>
+      <div class="event-item"><div class="event-name">火拳尾的革命之詩</div><div class="event-date">「火拳尾」饞饞把鏡海村鬧得雞犬不寧，雖然牠本是好意……牠的人類夥伴朵拉或許知道該怎麼讓牠安靜下來。</div></div>
+    </div>
+
+    <div class="section-title">💞 新功能：伊莫親密度 <span class="tag new">NEW</span></div>
+    <div class="panel"><p><strong>提升親密度等級可獲得</strong></p>
+      <ul><li>解鎖伊莫<strong>改名</strong>功能</li><li>提升主動技能「生命恢復」、「蘑力增幅」對該伊莫的效果</li></ul>
+      <p style="margin-top:10px"><strong>親密度來源</strong></p>
+      <ul><li>伊莫放在編隊或家園中，自然增長</li><li>共鳴升星與突破</li><li>一起完成連結者挑戰、參與搶蛋大作戰</li><li>一起擊敗艾德爾的野生與頭目級伊莫</li></ul>
+      <p style="color:var(--ink-soft);font-size:12.5px">※ 每隻伊莫每日及每週獲得的親密度皆有上限。</p></div>
+
+    <div class="section-title">🌈 活動：虹彩留影</div>
+    <div class="panel">
+      <table><tr><th>期數</th><th>時間（亞太服）</th></tr>
+      <tr><td>第 1 期</td><td>版本更新後 ~ 11/16 03:59</td></tr>
+      <tr><td>第 2 期</td><td>11/16 04:00 ~ 11/23 03:59</td></tr>
+      <tr><td>第 3 期</td><td>11/23 04:00 ~ 11/30 03:59</td></tr></table>
+      <p style="margin-top:12px"><strong>參與條件：</strong>角色晉升至 Ⅱ 級學員</p>
+      <ul><li>每期指定一隻虹彩形態伊莫，用遊戲內拍照功能記錄牠不同的「閃耀類型」推進進度。</li>
+      <li><strong>常規留影：</strong>每期首次記錄的前 5 種不同常規閃耀類型，各可領拍攝獎勵；累積 5 種後再領一份獎勵，超過 5 種不再計算。</li>
+      <li><strong>特別留影：</strong>首次記錄「炫之閃耀」或「影之閃耀」可領對應獎勵；任記其一再領額外獎勵（每期限一次）。特殊閃耀不計入常規 5 種進度。</li>
+      <li>同一閃耀類型重複拍攝不增加進度、不重複發獎。</li></ul></div>
+
+    <div class="section-title">🏁 活動：伊莫衝衝衝（競速）</div>
+    <div class="panel">
+      <p><strong>參與條件：</strong>連結者等級 40 級</p>
+      <table><tr><th>賽道</th><th>開放時間（亞太服）</th></tr>
+      <tr><td>1　綠野淺灘</td><td>版本更新後 ~ 12/10 07:59</td></tr>
+      <tr><td>2　鷗灣海崖</td><td>11/19 10:00 ~ 12/10 07:59</td></tr>
+      <tr><td>3　丹岩山徑</td><td>11/26 版本更新後 ~ 12/10 07:59</td></tr></table>
+      <p style="margin-top:12px"><strong>比賽模式</strong></p>
+      <ul><li><strong>風原盃・全速衝刺</strong>：單人競速，全天開放，挑戰個人最佳紀錄與更高評價。</li>
+      <li><strong>風原盃・極速爭鋒</strong>：多人競速（8 人同場），每日 18:00 ~ 24:00 開放；可爭奪隨機道具盒，與其他連結者對決。</li></ul>
+      <p>連結特定伊莫可觸發對應賽道的特殊事件（多人模式下丹岩山徑暫無特殊事件）。完成賽道任務可獲得專屬稱號、名片、頭像框與養成資源。</p></div>
+
+    <div class="section-title">👗 新造型上架</div>
+    <div class="panel"><p>「商城」→「推薦」，版本更新後分批上架：</p>
+      <ul><li><span class="tag shop">套裝</span> <strong>盔勇騎士</strong>：鋒芒所向，皆為勇者榮光。</li><li><span class="tag shop">套裝</span> <strong>幽影薔薇</strong>：幽夜裡盛開的薔薇，於月色下暗藏鋒芒。</li></ul></div>
+
+    <div class="section-title">⚖️ 改善與調整</div>
+    <div class="panel"><p><strong>🦈 卷齒鯊限時重置</strong></p>
+      <p>適用：本次平衡性調整前已獲得的卷齒鯊（基礎／虹彩形態）。</p>
+      <ul><li>退還已使用的全部經驗道具，並降低對應經驗</li><li>共鳴升星：退還全部材料並降至初始狀態</li><li>潛能激發：退還全部材料並降至初始狀態</li><li>潛能果實：退還，恢復可使用次數並移除效果</li></ul>
+      <p><strong>可重置時間：</strong>11/12 04:00 ~ 11/27 04:00（亞太服）</p></div>
+<div class="panel"><p><strong>劇情體驗</strong></p><ul><li>劇情回顧新增語音回顧，可重聽段落配音。</li><li>改善地圖任務類點位資訊側欄的顯示樣式。</li></ul></div><div class="panel"><p><strong>露營車家園</strong></p><ul><li>第二、三階段賽季活動調整為版本更新後開啟。</li><li>新增傢俱圖鑑套裝收集獎勵，改善圖鑑解鎖條件描述與排序。</li><li>HUD 新增從他人驛站／家園快捷返回自己驛站／家園的按鈕。</li><li>新增家園引導任務配音。</li></ul></div><div class="panel"><p><strong>搶蛋大作戰</strong></p><ul><li>新增局內檢舉功能（螢幕右上角按鈕）。</li><li>新增顯示連結極巨蛋的敵對連結者姓名。</li><li>改善小隊摸蛋各難度的幽黯伊莫等級上限，降低低等級連結者的難度。</li></ul></div><div class="panel"><p><strong>行動裝置版</strong></p><ul><li>新增高頻操作區域邊距調整功能。</li><li>iOS 改善儲存空間偵測與提示。</li><li>改善捕捉模式的鏡頭表現。</li><li>改善地宮搶蛋擊碎門特效，減少卡頓。</li></ul></div>
+    <div class="section-title">🛠️ 問題修復</div>
+    <div class="panel"><p><strong>伊莫與戰鬥</strong></p><ul>
+<li>虹尾鳶尾技能分身模型樣式與本體不一致</li><li>枯木鱷終結技在切磋中有低機率失效</li><li>怪盜蝠釋放技能時在特定地形可能被異常打斷</li><li>閃耀虹彩形態伊莫模型低機率異常顯示</li><li>覓葉羊感知到連結者時低機率主動攻擊</li><li>水漣漣、水露露技能「噴水」圖示錯誤；非基礎形態頭像圖示錯誤</li><li>錢兜兜終結技增益描述異常；技能「金幣激勵」冷卻時間異常</li><li>閃耀虹彩魅樂薇模型色塊異常</li><li>珊殼魚、珊瑚龍釋放「珊瑚叢刺」無法正確觸發攜帶物「異兆骨笛」核心效果；珊瑚龍元素等級顯示錯誤</li><li>霜鋒狼「迴旋冰刃」部分情況無法獲得終結值，且未正確扣除搶蛋裝備耐久</li></ul></div>
+    <div class="panel"><p><strong>地圖與玩法／全像訓練／搶蛋大作戰</strong></p><ul>
+<li>部分「輝耀印記」獲得琥珀後地圖標記未顯示完成</li><li>部分帳號連結者挑戰地圖標記與次數不符</li><li>「星遇茶會」載具上不顯示角色</li><li>全像協戰星級獎勵特定情況下無法手動領取</li><li>搶蛋：開金箱子會使出生點標記消失；衝擊門低機率無法擊碎；解除與蛋連結後蛋低機率瞬移回起點</li></ul></div>
+    <div class="panel"><p><strong>露營車家園</strong></p><ul>
+<li>家園自發光異常、未強制追蹤賽季任務、伊莫低機率卡住不工作</li><li>「超大號胖胖獺」無法出售；礦砂描述錯誤；白米、高級小麥等分類錯誤</li><li>南瓜模型無碰撞；二樓露營車無法進入；露營車四周穿模；進入露營車低機率卡頓</li><li>傢俱：縮放後碰撞異常、部分無法縮放、模型與圖示不一致；iOS 部分傢俱不可見；異常描邊</li><li>行動裝置版傢俱店介面自適應異常；私人驛站連結者資訊顯示異常</li><li>小火人工作狀態異常；部分家園資產圖示與模型不一致</li></ul></div>
+    <div class="panel"><p><strong>任務／造型／主機版</strong></p><ul>
+<li>特定情況下完成劇情後旅途札記條目未解鎖</li><li>染色效果其他連結者不可見；髮型染色儲存後顯示異常</li><li>Xbox/PS5：伊莫排序、放生卡頓；部分好友與郵件不顯示；「全像實力派」成就名稱錯誤；飛流翼飛天後釋放水球卡頓</li><li>PS5：登入驗證逾時後無法重試；退出隊伍後無法再次加入；低機率隨機崩潰</li></ul></div>
+
+    <div class="source-footer">資料來源：極星學院 營運部 官方公告（11/12 維護更新）。本頁僅整理亞太服（Aniimo-Apac）資訊。</div>
+  </div>
+<script src="./game-guide-emo-news-data.js"></script>
+</body>
+</html>
