@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PS Store 價格追蹤</title>
+<style>
+  :root {
+    --paper: #EDE6D3;
+    --paper-deep: #DED2B0;
+    --panel: #F4EEDD;
+    --ink: #2A2420;
+    --ink-soft: #6B6152;
+    --seal: #A32F26;
+    --seal-dark: #7E231C;
+    --brass: #8C6A2F;
+    --jade: #435F45;
+    --border: #B9A97D;
+    --border-soft: #CBBE95;
+    --font-display: "Noto Serif TC", serif;
+    --font-body: "Noto Sans TC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.7;
+  }
+  .header {
+    background: var(--ink);
+    color: var(--panel);
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .header h1 {
+    font-family: var(--font-display);
+    margin: 0 0 6px;
+    font-size: 22px;
+  }
+  .header p {
+    margin: 0;
+    color: var(--border-soft);
+    font-size: 13px;
+  }
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--seal);
+    text-decoration: none;
+  }
+  .back-link:hover { text-decoration: underline; }
+  .notice {
+    background: var(--panel);
+    border-left: 4px solid var(--seal);
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 30px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .panel p { margin: 0 0 8px; }
+  .panel p:last-child { margin-bottom: 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: top;
+  }
+  th {
+    background: var(--paper-deep);
+    font-family: var(--font-display);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    white-space: nowrap;
+    background: var(--jade);
+    color: var(--panel);
+  }
+  .tag.legend { background: #6b5fa8; }
+  .tag.new { background: var(--seal); }
+  .kv { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--border-soft); }
+  .kv:last-child { border-bottom:none; }
+  .kv .k { color:var(--ink-soft); white-space:nowrap; }
+  .kv .v { text-align:right; }
+  .tag.shop { background: var(--brass); }
+  .event-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-name { font-weight: 700; }
+  .event-date { color: var(--ink-soft); font-size: 12.5px; margin-top: 2px; }
+  .timeline-img {
+    width: 100%;
+    border: 1px solid var(--border);
+    margin: 8px 0;
+    display: block;
+  }
+  .source-footer {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  ul { margin: 8px 0; padding-left: 20px; }
+  li { margin-bottom: 5px; }
+  input[type=text]{border:1.5px solid var(--ink);padding:9px;font-family:var(--font-body);font-size:14px;background:var(--panel);width:100%;color:var(--ink)}
+  .btn{font-family:var(--font-body);font-size:13px;padding:8px 14px;border:1.5px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+  .btn-primary{background:var(--seal);color:var(--panel);border-color:var(--seal)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .btn-row>input{flex:1;min-width:130px}
+  .msg{display:none;margin-top:10px;padding:10px 12px;font-size:13px;background:var(--paper-deep);border-left:4px solid var(--jade)}
+  .msg.show{display:block}.msg.error{border-left-color:var(--seal)}
+  .watch{padding:12px 0;border-bottom:1px solid var(--border-soft)}
+  .watch:last-child{border-bottom:none}
+  .watch a.name{font-weight:700;color:var(--ink);text-decoration:none}
+  .meta{color:var(--ink-soft);font-size:12.5px;margin-top:2px}
+  .ok{color:var(--jade);font-weight:700}
+  .err{color:var(--seal)}
+  label.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px}
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>PS Store 價格追蹤</h1>
+    <p>設定遊戲頁面與價格區間，價格符合時由 bot 私訊通知你</p>
+  </div>
+  <div class="container">
+    <a class="back-link" href="./game-guide-index.html">← 回攻略選單</a>
+    <div id="app"><div class="notice">讀取中……</div></div>
+  </div>
+
+<script>
+// 這一頁沿用武俠小遊戲的登入（同一個網站，登入狀態共用）；功能由遊戲後端的 /api/price-watch 提供
+const API_BASE = 'https://site--wuxia--99glkqm9n4bx.code.run';
+
+async function api(path, opts = {}) {
+  try {
+    let token = null;
+    try { token = localStorage.getItem('wwm_token'); } catch {}
+    const headers = {};
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch(API_BASE + path, {
+      credentials: 'include', headers, method: opts.method || 'GET',
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    let data = {};
+    try { data = await res.json(); } catch {}
+    return { ok: res.ok, status: res.status, data };
+  } catch { return { ok: false, status: 0, data: { error: 'NETWORK_ERROR' } }; }
+}
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const limit = (n) => 'NT$' + Number(n).toLocaleString('en-US');
+const fmt = (n) => (n === null || n === undefined ? '—' : n === 0 ? '免費' : limit(n));
+const ERR = {
+  BAD_URL: '請貼 PS Store 遊戲頁面網址（store.playstation.com/…/concept/… 或 /product/…）',
+  MAX_REQUIRED: '最高價一定要填（要大於 0）',
+  BAD_MIN: '最低價格式不對',
+  MIN_GT_MAX: '最低價不能大於最高價',
+  LIMIT_REACHED: '追蹤數量已達上限，請先刪除不用的',
+  ALREADY_EXISTS: '這個遊戲你已經在追蹤了，請用「修改」調整價格',
+  NOT_FOUND: '找不到這筆追蹤',
+  NETWORK_ERROR: '連不上伺服器，請稍後再試',
+};
+const app = document.getElementById('app');
+
+function gate() {
+  app.innerHTML = `<div class="notice">需要先登入才能設定追蹤（用你玩武俠小遊戲的 Discord 帳號）。<br>
+    <button class="btn btn-primary" id="login" style="margin-top:10px">用 Discord 登入</button>
+    <div class="meta" style="margin-top:8px">登入後會回到遊戲頁面，再回到這一頁重新整理即可。登入有效期約 7 天。</div></div>`;
+  document.getElementById('login').onclick = () => { location.href = API_BASE + '/api/auth/login'; };
+}
+
+async function load() {
+  const { ok, status, data } = await api('/api/price-watch');
+  if (status === 401) return gate();
+  if (status === 403) { app.innerHTML = '<div class="notice">這個功能只有管理員能使用。</div>'; return; }
+  if (!ok) { app.innerHTML = '<div class="notice">讀取失敗，請稍後再試。</div>'; return; }
+  const items = data.items;
+
+  app.innerHTML = `
+    <div class="section-title">新增追蹤</div>
+    <div class="panel">
+      <div class="meta" style="margin:0 0 10px">貼上 PS Store 的遊戲頁面網址，設定想要的價格區間。價格落在區間內，會用 Discord 私訊通知你；預設每天台灣時間 9 點與 21 點各檢查一次。</div>
+      <input type="text" id="url" placeholder="https://store.playstation.com/zh-hant-tw/concept/…">
+      <div class="btn-row">
+        <input type="text" inputmode="numeric" id="min" placeholder="最低價（可留空＝0）">
+        <input type="text" inputmode="numeric" id="max" placeholder="最高價（必填）">
+      </div>
+      <label class="chk"><input type="checkbox" id="plus"> 用 PS Plus 會員價判斷（預設用一般人買得到的價格）</label>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="add">新增追蹤</button>
+        <button class="btn" id="testdm">傳測試私訊</button>
+      </div>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div class="section-title">我的追蹤（${items.length} / ${data.maxCount}）</div>
+    <div class="panel">${items.length ? items.map(row).join('') : '<div class="meta">還沒有追蹤任何遊戲</div>'}</div>
+    <div class="msg" id="msg2"></div>
+  `;
+
+  const say = (id) => (t, isErr) => { const b = document.getElementById(id); b.className = 'msg show' + (isErr ? ' error' : ''); b.textContent = t; };
+  const msg = say('msg'), msg2 = say('msg2');
+
+  document.getElementById('add').onclick = async function () {
+    this.disabled = true; msg('新增中，正在查詢目前價格……');
+    const { data: r } = await api('/api/price-watch', { method: 'POST', body: {
+      url: document.getElementById('url').value.trim(),
+      minPrice: document.getElementById('min').value.trim(),
+      maxPrice: document.getElementById('max').value.trim(),
+      usePlus: document.getElementById('plus').checked,
+    }});
+    this.disabled = false;
+    if (!r.ok) return msg(ERR[r.error] || '新增失敗，請重試', true);
+    const it = r.item;
+    msg('已追蹤「' + (it.name || '遊戲') + '」' + (r.fetchError
+      ? '，但這次查價格失敗：' + r.fetchError + '（之後排程會再試）'
+      : '，目前 ' + fmt(it.lastPrice) + (it.inRange ? (r.notified ? '，已符合區間，已私訊你 🎉' : '，已符合區間') : '，還沒到你的區間')));
+    setTimeout(load, 2500);
+  };
+
+  document.getElementById('testdm').onclick = async function () {
+    this.disabled = true;
+    const { data: r } = await api('/api/price-watch/test-dm/send', { method: 'POST' });
+    this.disabled = false;
+    msg(r.ok ? '已傳送測試私訊，請到 Discord 私訊確認有沒有收到'
+      : r.error === 'DM_BLOCKED' ? '傳不出去：請到 Discord 伺服器隱私設定，開啟「允許伺服器成員私訊」' : 'bot 剛啟動還沒準備好，稍後再試', !r.ok);
+  };
+
+  document.querySelectorAll('[data-id]').forEach(rowEl => {
+    const id = rowEl.dataset.id, edit = rowEl.querySelector('.edit');
+    rowEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-act]'); if (!btn) return;
+      const act = btn.dataset.act;
+      if (act === 'edit') { edit.style.display = 'block'; return; }
+      if (act === 'cancel') { edit.style.display = 'none'; return; }
+      btn.disabled = true;
+      if (act === 'del') {
+        if (!confirm('確定要取消追蹤這個遊戲嗎？')) { btn.disabled = false; return; }
+        const { data: r } = await api('/api/price-watch/' + id, { method: 'DELETE' });
+        if (r.ok) return load();
+        msg2(ERR[r.error] || '刪除失敗', true);
+      } else if (act === 'check') {
+        msg2('查詢中……');
+        const { data: r } = await api('/api/price-watch/' + id + '/check', { method: 'POST' });
+        if (r.ok) { msg2(r.fetchError ? '查詢失敗：' + r.fetchError : '目前 ' + fmt(r.item.lastPrice) + (r.item.inRange ? (r.notified ? '，已符合並私訊你' : '，已符合區間') : '，還沒到你的區間'), !!r.fetchError); setTimeout(load, 1800); return; }
+        msg2(r.error === 'COOLDOWN' ? '剛查過，請 ' + r.remainSeconds + ' 秒後再試' : (ERR[r.error] || '查詢失敗'), true);
+      } else if (act === 'save') {
+        const { data: r } = await api('/api/price-watch/' + id, { method: 'PUT', body: {
+          minPrice: rowEl.querySelector('.emin').value.trim(),
+          maxPrice: rowEl.querySelector('.emax').value.trim(),
+          usePlus: rowEl.querySelector('.eplus').checked,
+        }});
+        if (r.ok) return load();
+        msg2(ERR[r.error] || '儲存失敗', true);
+      }
+      btn.disabled = false;
+    });
+  });
+}
+
+function row(it) {
+  const status = it.lastError ? '<span class="err">⚠️ ' + esc(it.lastError) + '</span>'
+    : it.lastCheckedAt ? '<span class="meta">上次檢查 ' + new Date(it.lastCheckedAt).toLocaleString('zh-TW', { hour12: false }) + '</span>'
+    : '<span class="meta">尚未檢查</span>';
+  return `<div class="watch" data-id="${it.id}">
+    <a class="name" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.name || it.url)}</a>
+    <div class="meta">${it.usePlus ? '會員價' : '現價'} <strong>${fmt(it.lastPrice)}</strong>（原價 ${fmt(it.lastBase)}）　區間 ${limit(it.minPrice)} ～ ${limit(it.maxPrice)} ${it.inRange ? '<span class="ok">✅ 符合</span>' : ''}</div>
+    <div>${status}</div>
+    <div class="btn-row">
+      <button class="btn" data-act="check">立即檢查</button>
+      <button class="btn" data-act="edit">修改</button>
+      <button class="btn" data-act="del">刪除</button>
+    </div>
+    <div class="edit" style="display:none;margin-top:8px">
+      <div class="btn-row">
+        <input type="text" inputmode="numeric" class="emin" value="${it.minPrice || ''}" placeholder="最低（可留空）">
+        <input type="text" inputmode="numeric" class="emax" value="${it.maxPrice}" placeholder="最高（必填）">
+      </div>
+      <label class="chk"><input type="checkbox" class="eplus" ${it.usePlus ? 'checked' : ''}> 用會員價判斷</label>
+      <div class="btn-row"><button class="btn btn-primary" data-act="save">儲存</button><button class="btn" data-act="cancel">取消</button></div>
+    </div>
+  </div>`;
+}
+
+load();
+</script>
+</body>
+</html>
