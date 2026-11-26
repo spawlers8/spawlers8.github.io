@@ -169,6 +169,12 @@
 // 這一頁沿用武俠小遊戲的登入（同一個網站，登入狀態共用）；功能由遊戲後端的 /api/price-watch 提供
 const API_BASE = 'https://site--wuxia--99glkqm9n4bx.code.run';
 
+// 登入後 Discord 會帶 ?token=... 回到這頁：存起來並清掉網址上的 token
+try {
+  const u = new URL(location.href), tk = u.searchParams.get('token');
+  if (tk) { localStorage.setItem('wwm_token', tk); u.searchParams.delete('token'); history.replaceState(null, '', u.pathname + u.search + u.hash); }
+} catch {}
+
 async function api(path, opts = {}) {
   try {
     let token = null;
@@ -205,7 +211,7 @@ function gate() {
   app.innerHTML = `<div class="notice">需要先登入才能設定追蹤（用你玩武俠小遊戲的 Discord 帳號）。<br>
     <button class="btn btn-primary" id="login" style="margin-top:10px">用 Discord 登入</button>
     <div class="meta" style="margin-top:8px">登入後會回到遊戲頁面，再回到這一頁重新整理即可。登入有效期約 7 天。</div></div>`;
-  document.getElementById('login').onclick = () => { location.href = API_BASE + '/api/auth/login'; };
+  document.getElementById('login').onclick = () => { location.href = API_BASE + '/api/auth/login?return=/game-guide-psprice.html'; };
 }
 
 async function load() {
